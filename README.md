@@ -7,7 +7,7 @@
     - Why: Control traffic flow, segment networks, and simulate enterprise-grade setups.
     - Benefit: Hands-on firewall and VPN experience; data collection opportunities for traffic analysis.
 
-3.**Storage & Versioning (NAS + GitHub/GitLab self-hosted)**
+3. **Storage & Versioning (NAS + GitHub/GitLab self-hosted)**
     - Why: Centralized storage, backups, and code repositories.
     - Benefit: Demonstrates DevOps discipline; reproducible workflows for ML pipelines.
 
