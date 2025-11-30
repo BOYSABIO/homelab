@@ -171,4 +171,4 @@ Layer 0 is considered _fully complete_ when:
 - Add reverse-proxy in DMZ
 - Add VPN for remote admin
 - Add SPAN port for Zeek/Suricata traffic capture
-- USE Firewall as vpn in order to act as your own tailscale net. Tailscale built on wireguard so you can use wireguard and connect devices from anywhere to the network. Then, use VPN on top to also hide output traffic or to change exit output node. Connect to your home firewall VPN → then route traffic through a commercial VPN provider from inside your lab.
+- **USE Firewall as vpn in order to act as your own tailscale net. Tailscale built on wireguard so you can use wireguard and connect devices from anywhere to the network. Then, use VPN on top to also hide output traffic or to change exit output node. Connect to your home firewall VPN → then route traffic through a commercial VPN provider from inside your lab.**
