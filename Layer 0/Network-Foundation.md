@@ -1,174 +1,182 @@
 # **Layer 0 — Network & Physical Foundation (Blueprint)**
 
-## **1. Purpose of Layer 0**
+### 1. Purpose of Layer 0
+Layer 0 defines the **physical devices**, **network topology**, and **segmentation model** of the homelab.
+It establishes the *non-negotiable foundation* that every other layer builds on.
 
-Layer 0 defines the **physical**, **network**, and **segmentation** foundations of my homelab.  
-It does **not** require hardware changes immediately — it establishes the long-term architecture that all future layers will build on.
+Layer 0 answers:
+- What physical hardware exists?
+- How are devices connected?
+- How is the network segmented?
+- How is traffic allowed or denied?
+- How do users access the network securely?
 
-Layer 0 is essentially the “blueprint” that defines:
-- Future network layout
-- VLAN segmentation
-- Where services will live
-- How devices will communicate
-- What hardware roles exist
-- How security boundaries are enforced
+Layer 0 explicitly does **not** define:
+- Virtual machines
+- Containers
+- Applications
+- SIEM, ML pipelines, or services
 
-When Layer 0 becomes physical (later), it forms a secure, enterprise-like environment.
+Those begin in later layers.
 
 ---
+### 2. High-Level Outcome
+When Layer 0 is complete, the homelab has:
+- A dedicated firewall acting as the network brain
+- A managed switch enforcing physical segmentation
+- Clearly defined VLANs and trust boundaries
+- Secure remote access without exposing the home network
+- A foundation safe enough to run vulnerable and hostile systems
 
-# **2. Final Network Topology (Permanent Design)**
+---
+### 3. Final Network Topology
 
 ```
-                    INTERNET
-                        |
-                     Modem
-                        |
-               [WAN] Firewall (pfSense/OPNsense)
-                        |
-               [LAN Trunk] Managed Switch
-     -------------------------------------------------
-     |           |            |            |         |
- Mgmt VLAN    Trusted      Services      Lab VLAN   IoT
-   (10)        (20)          (30)          (40)      (50)
+Internet
+   |
+Modem
+   |
+[ Firewall (OPNsense) + Tailscale ]
+   |
+[ Managed Switch (VLANs) ]
+   |
+-----------------------------------------
+| Mgmt | Trusted | Services | Lab | IoT |
+-----------------------------------------
 ```
 
 ---
-# **3. VLANs & Subnets (Final)**
+### 4. VLANs & Subnets
 
-|VLAN ID|Name|Purpose|Subnet|
-|---|---|---|---|
-|**10**|Management|Firewall, Proxmox, Switch, NAS, monitoring|10.xx.xx.0/24|
-|**20**|Trusted/Home|Personal devices: PC, laptop|10.aa.bb.0/24|
-|**30**|Services|SIEM, GitLab, Jupyter, ML APIs, Databases|10.cc.dd.0/24|
-|**40**|Security Lab|Kali, vuln VMs, malware environments|10.ee.ff.0/24|
-|**50**|IoT|Smart home / untrusted devices|10.gg.hh.0/24|
-|**60**|DMZ (Optional)|Public-facing services behind reverse proxy|10.uu.uu.0/24|
+| VLAN | Name        | Purpose                                | Subnet        |
+| ---- | ----------- | -------------------------------------- | ------------- |
+| 10   | Management  | Firewall, Proxmox, Switch, NAS         | 10.xx.xx.0/24 |
+| 20   | Trusted     | Personal devices (PC, laptop)          | 10.aa.bb.0/24 |
+| 30   | Services    | SIEM, Git, ML, internal services       | 10.cc.dd.0/24 |
+| 40   | SecurityLab | Kali, vulnerable systems, malware labs | 10.ee.ff.0/24 |
+| 50   | IoT         | Untrusted smart devices                | 10.gg.hh.0/24 |
+| 60   | DMZ         | Optional public-facing services        | 10.uu.uu.0/24 |
+
+---
+### 5. Traffic Boundaries (Intent)
+
+- Trusted → Services ✅
+- Trusted → SecurityLab ❌
+- SecurityLab → Trusted/Mgmt ❌
+- Management → All VLANs ✅
+- IoT → Internet only
+
+These boundaries are enforced at the firewall.
+
+---
+### 6. Remote Access Strategy (Key Design Decision)
+#### Primary Remote Access: Tailscale
+Tailscale runs directly on the firewall and acts as the **secure remote-access layer**.
+- Firewall advertises internal subnets via Tailscale
+- Users authenticate via identity (not shared VPN keys)
+- Access control is handled via Tailscale ACLs
+- No public IP exposure
+- No port forwarding
+- No dynamic DNS required
+
+This allows:
+- Full admin access for the owner
+- Limited access for family members
+- Easy revocation and auditing
+- Secure access from anywhere
+
+#### Why Not a Traditional Firewall VPN (Important Learning)
+During design, it became clear that running a traditional VPN endpoint directly on the firewall introduces significant complexity:
+
+**Challenges identified:**
+- Requires Dynamic DNS or static public IP
+- Exposes a public-facing attack surface
+- Per-user authorization is difficult to manage
+- Adding multiple users (admin vs family) becomes messy
+- Combining inbound VPN access with outbound VPN routing (exit nodes, privacy VPNs) significantly increases complexity
+- Operational overhead grows quickly for a home environment
+
+This led to an important architectural insight:
+> Managing *identity-based access* is often more important than managing tunnels.
+
+#### Deferred Learning Goal
+Native WireGuard / IPsec on OPNsense is **not abandoned**, but intentionally deferred:
+- It will be explored later as a **learning lab**
+- Not used as the primary production access mechanism
+
+This keeps Layer 0 simple, secure, and operationally sane.
+
+---
+### 7. Physical Hardware Roles (Layer 0 Scope Only)
+#### Firewall (OPNsense)
+- Network brain
+- VLAN routing
+- Firewall rules
+- DHCP & DNS
+- Traffic logging
+- Tailscale subnet router
+
+#### Managed Switch
+- VLAN enforcement
+- Access and trunk ports
+- SPAN/mirror ports for traffic capture
+
+#### Proxmox Host (Existence Only)
+- Physical hypervisor
+- Connected via trunk port
+- Lives in Management VLAN
+- Hosts workloads in later layers
+
+#### NAS
+- Centralized storage
+- Logs, PCAPs, datasets, backups
+- Connected to Management VLAN
 
 ---
 
-# **4. Traffic Rules (Planned Security Boundaries)**
+### 8. Milestones for Layer 0
+#### Milestone 1 — Logical Design
+- VLANs defined
+- Subnets defined
+- Traffic intent documented
 
-### **Management (10)**
-- Full access to all VLANs
-- Restricted to admin devices only
+#### Milestone 2 — Hardware in Place
+- Firewall installed
+- Switch configured
+- VLANs enforced physically
 
-### **Trusted (20)**
-- Can access Services (30)
-- Can access Internet
-- Cannot access Lab (40)
+#### Milestone 3 — Secure Access
+- Tailscale running on firewall
+- Subnet routing enabled
+- ACLs defined for admin vs family
 
-### **Services (30)**
-- Accessible from Trusted + Mgmt
-- Cannot initiate connections to Lab (40)
+#### Milestone 4 — Safety Validation
+- SecurityLab cannot reach Trusted or Mgmt
+- Trusted can reach Services
+- Management access restricted
 
-### **Security Lab (40)**
-- Can access Internet (optional)
-- Cannot reach Trusted (20) or Mgmt (10)
-- Can communicate internally within VLAN
-
-### **IoT (50)**
-- Only outbound Internet access
-- No access to any other VLAN
-
----
-# **5. Final Hardware Roles (Long-Term Vision)**
-
-## **Firewall Appliance (pfSense / OPNsense)**
-**Role**: routing, VLANs, firewall rules, VPN, DHCP, logging  
-**Requirements**:
-- 2–4 NIC ports
-- Runs pfSense/OPNsense  
-    **Examples**:
-	- Protectli
-	- Qotom mini-PC
-	- Used Dell/HP small form factor PC + Intel NIC
+When all milestones are met → **Layer 0 is complete**
 
 ---
 
-## **Managed Switch (VLAN-capable)**
-**Role**: VLAN tagging, trunk ports, segmentation, SPAN/mirroring  
-**Requirements:**
-- 8–16 ports
-- 802.1Q VLAN support  
-    **Examples:**
-	- TP-Link TL-SG2008 / SG2016
-	- Netgear GS308E / GS316E
-	- Cisco SG250 series
+### 9. Key Learnings from Layer 0
+- Physical vs virtual infrastructure separation
+- Network segmentation using VLANs
+- Firewall policy design and trust boundaries
+- Why traditional self-hosted VPN endpoints are operationally complex
+- Identity-based access control as a modern alternative
+- The value of minimizing exposed attack surface
+- Designing for safety before adding vulnerable systems
+- Understanding the “network brain” concept
 
 ---
+### 12. Layer 0 Summary
+Layer 0 provides a **secure, segmented, and future-proof foundation**.
 
-## **Proxmox Hypervisor (Main Compute Node)**
-**Role**: Runs all VMs for the lab (AD, SIEM, vuln VMs, etc.)  
-**Requirements:**
-- 32GB–64GB RAM
-- At least 4 cores
-- SSD storage
-- Intel NIC for VLAN tagging  
-    **Examples:**
-	- Used workstation (Dell OptiPlex 7040, HP Z-series)
-	- Used server (Dell R210/R710, HP DL380)
-	- MinisForum/Beelink AMD mini-PCs
+It prioritizes:
+- Safety
+- Clarity
+- Operability
+- Learning the *right abstractions*
 
----
-
-## **NAS (Storage Server)**
-**Role**: central storage for logs, PCAPs, datasets, backups  
-**Requirements:**
-- RAID/ZFS recommended
-- 2–4 drives  
-    **Examples:**
-	- TrueNAS Core on old PC
-	- Synology/QNAP
-	- Unraid build
-
----
-
-# **6. Temporary Layer 0 (Current Implementation)**
-Until hardware is acquired:
-- ISP router acts as temporary firewall
-- Network is flat (no true VLANs)
-- Segmentation is simulated using:
-    - VirtualBox internal networks
-    - Software firewalls
-    - Host-only adapters
-- Proxmox may run nested on main PC for learning
-- NAS → replaced by folders or external SSD
-
-This allows development of VMs and services while designing the final topology.
-
----
-# **7. Definition of Done (Layer 0 Completion Criteria)**
-Layer 0 is considered _fully complete_ when:
-### **Network**
-- VLANs 10/20/30/40/50/60 are created
-- Managed switch enforces VLAN tagging
-- Firewall handles inter-VLAN routing
-
-### **Services**
-- DHCP configured per VLAN
-- DNS configured per VLAN
-- Gateway separation implemented
-
-### **Security**
-- “Lab” VLAN cannot reach Trusted/Mgmt
-- “Trusted” VLAN can reach Services
-- “Mgmt” VLAN restricted to admin devices
-
-### **Hardware**
-- Dedicated firewall appliance in place
-- Managed switch deployed
-- Proxmox node connected via trunk
-- NAS connected to Mgmt VLAN
-
-### **Documentation**
-- All diagrams, subnet plans, and traffic rules documented here
-- Hardware list and future purchases clearly defined
-
----
-# **8. Notes / Future Additions**
-- Add 2nd Proxmox node for clustering
-- Add reverse-proxy in DMZ
-- Add VPN for remote admin
-- Add SPAN port for Zeek/Suricata traffic capture
-- **USE Firewall as vpn in order to act as your own tailscale net. Tailscale built on wireguard so you can use wireguard and connect devices from anywhere to the network. Then, use VPN on top to also hide output traffic or to change exit output node. Connect to your home firewall VPN → then route traffic through a commercial VPN provider from inside your lab.**
+All higher layers build on this without rework.
