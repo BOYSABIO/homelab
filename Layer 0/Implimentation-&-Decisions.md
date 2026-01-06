@@ -34,6 +34,18 @@ Primary focus at this stage:
 - **OS:** OPNsense
 - **Position:** Modem → Firewall → Managed Switch
 
+### IP Ranges
+In enterprise environments, utilizing 10.x.x.x is more common due to the larger address space, easier segmentation (VLANs) for example (10.10.x.0/24) and overall clearer mental mapping. This would be something to incorporate in the future of the lab with segmentation. 
+
+Important understanding (subnets). Start with an IP range. For simplicity, 192.168.x.0/24. The /24 is the subnet and determines how the predefined number of IP's are split. It is about size and not position. IPv4 has four octets that represent the IP address which under the hood are in binary and are 32 bits total. When you say /24 (which is a standard), you are saying that 24 bits are fixed and that the remain 8 can be changed. So this defines the size. 8 bits represents one of the octets so in this case you would be changing 192.168.1.**x** However, when you change /24 by one number, this mental idea starts to change because when you add one bit by saying /25, you end up creating two subnets which are seen as two separate networks. This is because your range is still 0-255 IPs however /25 means that 25 of the bits are fixed meaning you half your IPs into two networks: 0-127 and 128-255. Both networks have to have their own router at .0 and in the other network at .128 and they both need to have their own IP dedicated to broadcast as well. They are NOT on the same network. 
+
+| IP Pool    | Enterprise Standard Use                     |
+| ---------- | ------------------------------------------- |
+| .1         | Router                                      |
+| .2 - .20   | **Infrastructure** (firewall, NAS, Servers) |
+| .21 - .40  | Reserved / future **statics**               |
+| .41 - .245 | DHCP Pool (Dynamic)                         |
+
 ### Switching
 - **Managed Switch:** _(model to be confirmed / filled in)_
 - **Current State:**
@@ -44,12 +56,12 @@ Primary focus at this stage:
 ### End Devices (Current)
 - Personal PC (wired)
 - Laptop docking station (wired)
-- Vintage Story game server
+- Vintage Story game server (wired)
 - No Wi-Fi AP behind firewall yet (intentionally deferred)
 
 > Note: There are currently **two separate networks** in the house:
-> - Household Wi-Fi (Eero mesh)
-> - Personal wired homelab network (this project)
+> - Household Wi-Fi
+> - Personal wired homelab network
 
 ---
 
@@ -106,11 +118,15 @@ Primary focus at this stage:
 - **Status:** Active (temporary)
 - **Subnet:** 192.168.x.0/24 (current LAN)
 - **Leases:** Dynamic by default
+- **Interface:** LAN
 
 ### Static Mappings
 - Static DHCP mapping configured for:
   - Vintage Story server
 - Verified lease transition from dynamic → static
+
+### Domain Name
+The host name + domain name helps to better identify devices and where they are located in the logs. You can also resolve to these names making it easier when connecting to devices or services. For the domain name, it is not wrong to use random names however, it is currently best practice to use `home.arpa` as it is designed for non-unique use in residential home networks. The domain is not resolvable across the internet and is intended only for use in small networks.
 
 ### Planned Change
 - **Target DHCP Service:** Kea DHCP
