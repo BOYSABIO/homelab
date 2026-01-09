@@ -109,15 +109,76 @@ Important understanding (subnets). Start with an IP range. For simplicity, 192.1
 - Client IPs visible
 - Domain patterns observable
 
+### Logs Cheat Sheet
+Unbound DNS logs show how name resolution requests are processed by the firewall.
+Understanding these entries helps distinguish normal behavior from misconfiguration or attacks.
+#### Common Log Fields
+
+| Field       | Meaning                                                               |
+| ----------- | --------------------------------------------------------------------- |
+| Client IP   | The device that sent the DNS query (e.g. 192.168.0.x)                 |
+| Domain name | The fully qualified domain name being queried (often ends with a dot) |
+| Record Type | The type of DNS record requested (A, AAAA, PTR, etc.)                 |
+| Class (IN)  | The DNS class — almost always `IN` (Internet)                         |
+
+#### DNS Record Types You Will Commonly See
+
+| Record | Name                            | Explanation                                                               |
+| ------ | ------------------------------- | ------------------------------------------------------------------------- |
+| A      | IPv4 Address Record             | Maps a hostname to an IPv4 address (e.g. www.example.com → 93.184.216.34) |
+| AAAA   | IPv6 Address Record             | Maps a hostname to an IPv6 address                                        |
+| PTR    | Pointer Record (Reverse Lookup) | Maps an IP address back to a hostname (used for reverse DNS)              |
+| NS     | Name Server Record              | Indicates which DNS servers are authoritative for a domain                |
+| SOA    | Start of Authority              | Contains administrative information about a DNS zone                      |
+| TXT    | Text Record                     | Carries arbitrary text (used for SPF, DKIM, verification, etc.)           |
+| SRV    | Service Record                  | Used to locate services (e.g. LDAP, SIP, Kerberos)                        |
+
+#### DNS Class: IN
+
+| Value | Meaning                                       |
+| ----- | --------------------------------------------- |
+| IN    | Internet (default and standard class for DNS) |
+
+Other classes exist historically but are rarely used today.
+In modern networks, DNS logs will almost always show `IN`.
+
+#### Fully Qualified Domain Names (FQDN)
+Domains in logs often end with a dot:
+
+Example: www.bing.com.
+
+The trailing dot means:
+> “This name is absolute and fully qualified, starting at the DNS root.”
+
+It is normal and expected in DNS logs.
+
+#### What Indicates Normal DNS Recursion
+Recursion is working correctly when:
+- Clients query the firewall
+- The firewall resolves domains it does not host locally
+- Responses are returned without SERVFAIL errors
+
+Seeing queries for public domains (bing.com, cloudflare.com, omada, etc.)
+indicates recursive resolution is functioning.
+
+#### Red Flags to Watch For
+
+| Pattern                         | Meaning                                |
+| ------------------------------- | -------------------------------------- |
+| SERVFAIL spikes                 | Upstream resolution problems           |
+| Large volumes of random domains | Possible malware or misbehaving client |
+| External DNS servers contacted  | Potential DNS bypass or leak           |
+| Rebind protection blocks        | Possible DNS rebinding attack          |
+
 ---
 
 ## 5. DHCP — Current & Planned State
 
 ### Current DHCP Service
-- **Service:** dnsmasq
-- **Status:** Active (temporary)
+- **Service:** Kea DHCP
+- **Status:** Active 
 - **Subnet:** 192.168.x.0/24 (current LAN)
-- **Leases:** Dynamic by default
+- **Leases:** Dynamic by default with exceptions
 - **Interface:** LAN
 
 ### Static Mappings
@@ -128,7 +189,7 @@ Important understanding (subnets). Start with an IP range. For simplicity, 192.1
 ### Domain Name
 The host name + domain name helps to better identify devices and where they are located in the logs. You can also resolve to these names making it easier when connecting to devices or services. For the domain name, it is not wrong to use random names however, it is currently best practice to use `home.arpa` as it is designed for non-unique use in residential home networks. The domain is not resolvable across the internet and is intended only for use in small networks.
 
-### Planned Change
+### DNSmasq to Kea
 - **Target DHCP Service:** Kea DHCP
 - **Reason for Migration:**
   - Better logging
@@ -136,8 +197,107 @@ The host name + domain name helps to better identify devices and where they are 
   - Cleaner separation of DNS and DHCP roles
   - Future automation friendliness
 
-> Migration to Kea is planned **before VLAN rollout**
+> Migration to Kea was planned **before VLAN rollout**
 > to reduce complexity during segmentation.
+
+### Kea DHCP Log Cheat Sheet (DHCPv4)
+Kea DHCP logs describe how IP addresses are assigned, renewed, and released.
+Understanding these logs allows you to verify correctness, detect conflicts,
+and debug DHCP issues without guessing.
+
+#### Core DHCP Message Types (The DHCP Handshake)
+
+| Message      | Name                    | Explanation                                                |
+| ------------ | ----------------------- | ---------------------------------------------------------- |
+| DHCPDISCOVER | Client Discovery        | Client broadcasts “Is there any DHCP server?”              |
+| DHCPOFFER    | Server Offer            | DHCP server proposes an IP address                         |
+| DHCPREQUEST  | Client Request          | Client requests the offered IP                             |
+| DHCPACK      | Server Acknowledgment   | Server confirms and assigns the IP                         |
+| DHCPRELEASE  | Client Release          | Client voluntarily releases its lease                      |
+| DHCPNAK      | Negative Acknowledgment | Server rejects the request (misconfig, wrong subnet, etc.) |
+This four-step exchange is known as **DORA**:
+DISCOVER → OFFER → REQUEST → ACK
+
+#### Common Log Fields
+
+| Field       | Meaning                                    |
+| ----------- | ------------------------------------------ |
+| hwtype      | Hardware type (1 = Ethernet)               |
+| MAC address | Physical address of the client             |
+| cid         | Client Identifier (may differ from MAC)    |
+| tid         | Transaction ID (unique per DHCP exchange)  |
+| interface   | Interface handling the request (e.g. igc1) |
+| lease       | IP address being offered or assigned       |
+
+#### Lease Lifecycle Events
+
+| Log Entry         | Meaning                        |
+| ----------------- | ------------------------------ |
+| DHCP4_LEASE_OFFER | IP address proposed to client  |
+| DHCP4_LEASE_ALLOC | IP address officially assigned |
+| DHCPRELEASE       | Client gave back its IP        |
+| valid-lifetime    | Lease duration (in seconds)    |
+
+#### Static Reservations (Very Important)
+When a client has a reservation, Kea logs will show:
+- The reserved IP being offered
+- Assignment **outside** the dynamic pool
+- The reservation overriding pool logic
+
+This proves the reservation system is working.
+
+#### Example: Dynamic Client (Pool Assignment)
+```
+DHCPDISCOVER  
+DHCPOFFER lease 192.168.0.x
+DHCPREQUEST  
+DHCPACK lease allocated
+```
+Meaning:
+- Client had no reservation
+- IP came from the pool
+- Lease assigned normally
+
+#### Example: Reserved Host (Static Mapping)
+```
+DHCPDISCOVER  
+DHCPOFFER lease 192.168.x.20  
+DHCPREQUEST  
+DHCPACK lease allocated
+```
+Meaning:
+- MAC matched a reservation
+- IP assigned outside pool
+- Reservation took priority
+
+#### DHCPRELEASE Explained
+```
+DHCPRELEASE received from 192.168.x.20
+```
+Meaning:
+- Client shut down cleanly
+- Lease returned early
+- IP becomes reusable (unless reserved)
+
+This is normal behavior for servers and VMs.
+
+#### What Normal Looks Like
+Normal DHCP noise includes:
+- Frequent DISCOVER / REQUEST messages
+- Clients renewing leases
+- Infrastructure devices asking occasionally
+- DHCPRELEASE on shutdown or reboot
+
+A quiet DHCP log is **not** expected.
+
+#### Red Flags to Watch For
+
+| Pattern                         | Meaning                                     |
+| ------------------------------- | ------------------------------------------- |
+| Repeated DISCOVER with no OFFER | DHCP server unreachable                     |
+| Frequent DHCPNAK                | Wrong subnet or conflicting servers         |
+| Same IP offered repeatedly      | Pool exhaustion or conflict                 |
+| No DHCPRELEASE ever             | Client crashes or power loss (not critical) |
 
 ---
 
