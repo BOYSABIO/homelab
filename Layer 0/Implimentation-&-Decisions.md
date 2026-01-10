@@ -310,10 +310,82 @@ A quiet DHCP log is **not** expected.
   - Trunk/access port setup
   - Kea DHCP migration
 
+### Physical Switch Port Map (Current)
+Switch: TP-Link Omada SG2210P
+
+Port 1 → OPNsense firewall (LAN interface)
+Port 2 → Main PC (Trusted endpoint)
+Port 3 → Docking station (intermittent laptop)
+Port 4 → Vintage Story server
+Port 5–8 → Unused
+SFP ports → Unused
+
 ### Current Reality
 - Network is flat
 - Segmentation enforced only by physical separation
 - Firewall rules currently apply to single LAN interface
+
+### Important Distinction Between Access Ports and Trunk Ports
+- Access port → VLAN assigned by switch port
+- Trunk port → VLAN preserved via tags
+- VLAN-aware device → VLAN assigned in software
+
+VLANs provide Layer 2 separation.
+Routing and policy enforcement happen at Layer 3 (firewall).
+#### Core Principle
+VLANs are assigned when traffic ENTERS a VLAN-aware device,  
+and preserved across trunk links using 802.1Q tags.
+
+VLANs are NOT inferred from IP addresses or cables.
+
+### Access Ports
+An access port belongs to exactly ONE VLAN.
+- End devices (PCs, printers, NAS) are not VLAN-aware
+- Frames arrive UNTAGGED
+- The switch assigns the VLAN based on the ingress port
+- If forwarding to a trunk, the switch ADDS the VLAN tag
+
+Access ports:
+- Do not carry multiple VLANs
+- Do not forward tagged frames
+
+### Trunk Ports
+A trunk port carries MULTIPLE VLANs simultaneously.
+- Frames are TAGGED with VLAN IDs
+- The switch does NOT assign VLANs on trunks
+- Tags are preserved end-to-end
+- Used between VLAN-aware devices
+
+Trunk ports connect:
+- Switch ↔ Firewall
+- Switch ↔ Proxmox
+- Switch ↔ Managed AP
+- Switch ↔ Switch
+
+### VLAN-Aware Devices
+Some devices understand VLAN tags and assign VLANs in software.
+Examples:
+- Firewalls (OPNsense)
+- Hypervisors (Proxmox)
+- Managed Access Points
+
+These devices:
+- Receive tagged frames
+- Strip tags internally
+- Assign traffic to logical interfaces or bridges
+- Re-tag traffic when sending it back out
+
+### Proxmox VLAN Behavior
+- Proxmox NIC is connected via a TRUNK
+- Proxmox assigns VLANs to bridges or VM interfaces
+- VM traffic is tagged before leaving the host
+- Switch preserves tags, no guessing involved
+
+### Why PCs Do Not Use Trunks
+- PCs are not VLAN-aware by default
+- They send and receive untagged frames
+- VLAN membership is enforced by the switch port
+- This reduces complexity and prevents misconfiguration
 
 ---
 
