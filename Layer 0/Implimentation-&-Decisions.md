@@ -387,6 +387,183 @@ These devices:
 - VLAN membership is enforced by the switch port
 - This reduces complexity and prevents misconfiguration
 
+### VLAN Implementation & Mental Model (OPNsense + Managed Switch)
+
+## Purpose
+This document captures:
+- What VLANs actually do (beyond the textbook definition)
+- How VLANs are implemented across OPNsense and a managed switch
+- Why VLANs are created conceptually first and only activated later
+- Common pitfalls and what we initially missed
+- The exact step-by-step process used in this homelab
+
+This reflects a **real-world, enterprise-style VLAN rollout**, not a simplified lab example.
+
+### What a VLAN Actually Is (Practical Definition)
+A VLAN is a **logical Layer 2 broadcast domain**.  
+Each VLAN behaves like a **separate physical switch**, even though all traffic travels over the same cables.
+
+Key properties:
+- Devices in different VLANs **cannot communicate at Layer 2**
+- Inter-VLAN communication **requires a router or firewall**
+- VLANs reduce broadcast traffic and enforce segmentation
+
+A VLAN does **nothing by itself** until:
+- A device is assigned to it (via PVID or tagging)
+- A Layer 3 interface exists to route traffic
+
+### The Two Places VLANs Must Exist
+A VLAN must be configured in **two completely different systems**:
+1. OPNsense (Layer 3: routing, firewall, services)
+2. Managed Switch (Layer 2: tagging, forwarding, access)
+
+Both must agree, or traffic silently fails.
+
+### VLAN Design & IP Addressing Scheme
+We use a simple, scalable, enterprise-style mapping:
+
+| VLAN ID | Name       | Subnet        | Gateway    |
+| ------: | ---------- | ------------- | ---------- |
+|      10 | Management | 10.xx.xx.0/24 | 10.xx.xx.1 |
+|      20 | Trusted    | 10.yy.yy.0/24 | 10.yy.yy.1 |
+|      30 | Servers    | 10.zz.zz.0/24 | 10.zz.zz.1 |
+|      40 | CyberLab   | 10.ww.ww.0/24 | 10.ww.ww.1 |
+|      50 | Guest      | 10.vv.vv.0/24 | 10.vv.vv.1 |
+
+#### Why this scheme?
+- VLAN ID matches subnet (easy to reason about)
+- /24 gives enough addresses without being flat
+- Gateway always `.1` for consistency
+- Aligns with enterprise and certification conventions
+
+### Conceptual Setup in OPNsense (Nothing Breaks Yet)
+#### Step 1: Create VLAN Device
+- Parent interface: LAN (physical NIC)
+- VLAN tag: e.g. 20
+- This creates a **virtual interface**, not an active network
+
+**Important:**  
+At this point, *no traffic flows*. No device is using the VLAN yet.
+
+#### Step 2: Assign and Enable the Interface
+- Assign VLAN device as an interface (e.g. `VLAN20_TRUSTED`)
+- Enable interface
+- Assign static IP (e.g. `10.yy.yy.1/24`)
+
+**What this does internally:**
+- Creates a Layer 3 endpoint (gateway)
+- Allows routing *if* traffic reaches it
+- Still does not allow traffic by default (firewall default deny)
+
+#### Step 3: Enable Services on the VLAN (Critical Step)
+Services must explicitly listen on the VLAN interface:
+- DHCP (Kea)
+- DNS (Unbound / DNSmasq)
+
+**What we initially missed:**
+- DHCP can hand out leases
+- But DNS and routing fail if services are not bound to the VLAN
+- This leads to “I have an IP but nothing works”
+
+#### Step 4: DHCP Configuration
+- Subnet: `10.yy.yy.0/24`
+- Pool: e.g. `10.yy.yy.100–10.yy.yy.200`
+- Interface: VLAN20_TRUSTED
+
+**What DHCP actually does:**
+- Assigns IP, mask, gateway, DNS
+- Proves Layer 2 VLAN tagging works
+- Does NOT guarantee routing or firewall permission
+- 100-200 allows space for static IPs
+
+#### Step 5: Firewall Rules (Default Deny)
+OPNsense blocks all traffic by default on new interfaces.
+Initial bootstrap rule:
+Allow VLAN20_TRUSTED net → any
+
+
+This makes the VLAN behave **exactly like the original LAN**.
+
+Security isolation comes later.
+
+### Switch-Side Configuration (Layer 2)
+#### VLAN Creation
+- Create VLAN ID (e.g. 20)
+- VLAN exists logically but has no members yet
+
+#### Trunk Port (Firewall Uplink)
+The switch port connected to OPNsense is a **trunk**.
+
+Configuration:
+- Tagged: VLANs 10, 20, 30, 40, 50
+- Untagged: none (or VLAN 1 temporarily)
+- Acceptable frames: Tagged only
+- Ingress checking: enabled
+
+**Purpose:**
+- Carry all VLANs to the firewall
+- Preserve tags for routing
+
+#### Access Ports (End Devices)
+Access ports connect to non-VLAN-aware devices.
+
+Configuration:
+- Untagged: exactly one VLAN
+- PVID: VLAN ID
+- Ingress checking: enabled
+- Acceptable frames: Untagged only (or “Admit All” if limited UI)
+
+### The Critical Concept: PVID Is the Activation Switch
+A VLAN does **nothing** until a port’s PVID is changed.
+#### What happens when PVID changes:
+1. Device sends untagged Ethernet frames
+2. Switch assigns those frames to the PVID VLAN
+3. Frames are tagged internally
+4. Traffic is forwarded only where that VLAN exists
+5. Firewall receives tagged traffic and routes it
+
+**This is the moment the VLAN becomes “real”.**
+
+Before this:
+- VLAN exists conceptually
+- No device uses it
+
+After this:
+- Device is isolated from all other VLANs
+- Routing and firewall rules apply
+
+### Why Build Everything First, Then Move Devices
+Best practice:
+1. Create VLANs everywhere
+2. Enable services
+3. Prepare firewall rules
+4. Test on unused ports
+5. Migrate devices by changing PVID only
+
+Benefits:
+- No downtime
+- No lockouts
+- Easy rollback
+- Matches enterprise change control
+
+### Common Pitfalls Encountered
+- VLAN exists but firewall port not tagged
+- Services not bound to VLAN interface
+- Firewall rules missing (default deny)
+- Expecting connectivity before changing PVID
+- Confusing “Management VLAN” with “Trunk Port”
+
+Each failure helped clarify the real data path.
+
+### Final Mental Model
+- **OPNsense defines networks**
+- **Switch assigns devices to networks**
+- **PVID determines where untagged traffic lives**
+- **Trunk ports carry tags**
+- **Firewall rules control inter-VLAN communication**
+
+VLANs are simple once you realize:
+> *Nothing happens until the switch assigns a port to a VLAN.*
 ---
 
 ## 7. Remote Access Strategy (Implemented vs Planned)
