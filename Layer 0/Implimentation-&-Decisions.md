@@ -564,6 +564,229 @@ Each failure helped clarify the real data path.
 
 VLANs are simple once you realize:
 > *Nothing happens until the switch assigns a port to a VLAN.*
+
+## VLANs — Understanding, Process, and Lessons Learned
+#### Why This Document Exists
+This document exists to **preserve understanding**, not just configuration.
+
+VLANs are deceptively simple on paper but extremely easy to misconfigure in practice. The goal here is to capture:
+
+- How VLANs *actually* work at Layer 2 and Layer 3
+- The real-world **order of operations**
+- The **failure modes** we encountered
+- The subtle differences between “working”, “kind of working”, and “correct”
+- A mental model that can be replayed later
+
+If I ever forget how VLANs work, reading this should allow me to *relive the problem-solving process* and rebuild confidently.
+
+### Initial Mental Model (Before Hands-On)
+Initial understanding:
+- VLANs “split a LAN into virtual networks”
+- Devices in different VLANs are isolated
+- The firewall routes between VLANs
+- Managed switches “somehow handle it”
+
+What was **missing**:
+- Where VLAN decisions actually happen
+- How tagging vs untagging really works
+- Why things silently fail instead of erroring
+- Why management behaves differently
+- How DHCP/DNS interplay with VLANs
+- Why order matters more than configuration itself
+
+### The First Key Realization: Where VLANs Live
+#### VLANs are decided at the **switch**, not the firewall
+This was the most important conceptual unlock.
+
+- The **switch** assigns VLANs to frames
+- The **firewall** only routes *between subnets*
+- VLAN tagging is **Layer 2**
+- IP routing is **Layer 3**
+
+The firewall never “assigns” VLANs — it only:
+- Receives tagged frames
+- Strips the tag
+- Routes based on IP
+- Sends frames back *tagged again*
+
+If the switch doesn’t tag frames correctly, the firewall never even sees the traffic.
+
+### Tagged vs Untagged — The Second Big Unlock
+#### Untagged traffic
+- Has **no VLAN ID**
+- Must be assigned a VLAN by the switch
+- Uses the **PVID** (Port VLAN ID)
+#### Tagged traffic
+- Explicitly carries a VLAN ID (802.1Q)
+- The switch must be told whether to:
+  - Accept it
+  - Preserve it
+  - Drop it
+
+This leads to the core rule:
+> **End devices send untagged traffic.  
+> Infrastructure devices send tagged traffic.**
+
+### Trunk Ports vs Access Ports (As Discovered, Not Memorized)
+#### Access Port (PCs, servers, laptops)
+What finally worked:
+- Exactly **one untagged VLAN**
+- PVID set to that VLAN
+- No tagged VLANs allowed
+
+What this means:
+- Any frame arriving here gets assigned to the VLAN
+- The device never knows VLANs exist
+- Clean, predictable behavior
+
+#### Trunk Port (Firewall, Proxmox, APs)
+What finally worked:
+- **Only tagged VLANs**
+- No untagged/native VLAN
+- Tagged-only accepted
+- Ingress checking enabled
+
+Why:
+- The firewall already tags traffic
+- Untagged traffic here causes ambiguity
+- Native VLANs on trunks are dangerous unless intentional
+
+This distinction explained *most* early failures.
+
+### The “Why Is Nothing Working?” Phase
+#### Symptom
+- Device plugged in
+- No DHCP
+- No DNS
+- No link detection sometimes
+- No errors anywhere
+#### What was actually wrong (multiple times)
+- VLAN existed conceptually but wasn’t active
+- PVID not changed
+- Firewall service not listening on VLAN interface
+- DHCP enabled but interface not selected
+- DNS enabled but interface not selected
+- Switch port in VLAN config but PVID still old
+- Firewall rules missing (even for basic connectivity)
+Lesson learned
+> VLANs don’t “turn on” until **PVID is changed**.
+
+Everything can look correct in the UI and still do nothing.
+
+### Order of Operations (Critical for Reproducibility)
+The **exact sequence** that worked reliably:
+1. Create VLAN interface in OPNsense
+2. Assign IP and subnet
+3. Enable DHCP on that VLAN
+4. Enable DNS (Unbound / Kea / dnsmasq) on that VLAN
+5. Add a **temporary allow-any firewall rule**
+6. Create VLAN in switch (do not move devices yet)
+7. Configure VLAN membership (tagged/untagged)
+8. Change PVID on the access port
+9. Renew DHCP lease
+10. Validate:
+   - IP
+   - Gateway
+   - DNS
+   - Internet
+11. Only then move the next device
+
+Skipping steps caused silent failure every time.
+
+### Management VLAN — The Most Confusing (and Educational) Part
+#### Observation
+- Firewall UI accessible from all VLANs (with rules)
+- Switch UI accessible **only from VLAN10**
+
+At first this looked like:
+- Firewall bug
+- Switch bug
+- VLAN misconfiguration
+- ACL issue
+
+#### Actual reason
+The switch has a **management plane** that:
+- Lives in exactly one VLAN
+- Only responds to management traffic from that VLAN
+- Is separate from normal frame forwarding
+
+This behavior:
+- Is not ingress checking
+- Is not firewall related
+- Is intentional and secure by default
+
+This explained:
+- Why VLAN20 could access servers in VLAN30
+- But could *not* access the switch UI in VLAN10
+
+This was a huge “aha” moment.
+
+### VLAN1 (Legacy LAN) — The Hidden Trap
+Key discovery:
+- Leaving VLAN1 partially configured is dangerous
+- Especially leaving it untagged on trunk ports
+
+Final understanding:
+- VLAN1 should not be part of the trunk
+- VLAN1 should not be untagged on the firewall port
+- VLAN1 should exist only as:
+  - Transitional
+  - Recovery
+  - Or fully retired
+
+Most weird behavior early on came from VLAN1 still being “kind of active”.
+
+### Ingress Checking & Acceptable Frames — When to Harden
+#### Early phase (migration)
+- Ingress checking often disabled
+- Accept all frames
+- Goal: avoid lockouts
+
+#### Stable phase (post-migration)
+**Access ports**
+- Ingress checking: enabled
+- Acceptable frames: untagged only
+
+**Trunk ports**
+- Ingress checking: enabled
+- Acceptable frames: tagged only
+
+This enforces:
+- No VLAN hopping
+- No accidental tagging
+- No ambiguity
+
+Hardening only worked **after** understanding was solid.
+
+### What We Learned (The Real Takeaways)
+- VLANs fail silently by design
+- Most issues are Layer 2, not Layer 3
+- The switch is the source of truth for VLAN membership
+- Firewalls don’t fix broken tagging
+- Management planes are special
+- Order matters more than settings
+- Recovery paths are not optional
+- “Working” is not the same as “correct”
+- Confusion usually means mixed trust boundaries
+
+### Reproducible Mental Model (If I Forget Everything)
+If I forget VLANs entirely, remember this:
+1. End devices are dumb → access ports
+2. Infrastructure is smart → trunk ports
+3. VLANs are applied at ingress on the switch
+4. PVID decides untagged traffic
+5. Firewall routes, it does not assign VLANs
+6. Services must explicitly listen on VLAN interfaces
+7. Management traffic is special
+8. Never remove the recovery path first
+
+If something doesn’t work:
+- Check PVID
+- Check tagging
+- Check service bindings
+- Check firewall rules
+- Check which layer the failure belongs to
+
 ---
 
 ## 7. Remote Access Strategy (Implemented vs Planned)
