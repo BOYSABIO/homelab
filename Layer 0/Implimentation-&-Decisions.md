@@ -806,6 +806,13 @@ If something doesn’t work:
 - Native WireGuard / IPsec on OPNsense
 - To be explored later as a lab exercise
 
+### Important Distinctions
+>Tailscale is not a replacement for VLANs.  
+>It is a separate identity-based control plane that can be _selectively bridged_ into VLANs via firewall rules.
+
+>VLAN interfaces are Layer-3 gateways and need IPs.  
+>Tailscale is a Layer-3 overlay managed by the daemon — OPNsense does not assign its IP.
+
 ---
 
 ## 8. Security Baseline (Current)
