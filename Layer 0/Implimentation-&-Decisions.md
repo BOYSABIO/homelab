@@ -813,6 +813,118 @@ If something doesn’t work:
 >VLAN interfaces are Layer-3 gateways and need IPs.  
 >Tailscale is a Layer-3 overlay managed by the daemon — OPNsense does not assign its IP.
 
+### Remote Access (Tailscale) MVP
+Enable **secure, identity-based remote administration** of the homelab firewall (OPNsense) without exposing services to the internet and **without coupling remote access to VLAN trust**.
+
+This remote access acts as an **out-of-band control plane**, allowing Layer 0 work (segmentation, firewall policy) to continue safely from a remote location.
+
+### Design Principles (Non‑Negotiable)
+- **Control plane ≠ data plane**: Remote access is for administration, not general LAN access.
+- **Identity-first**: Access is tied to a Tailscale identity, not IP location.
+- **Least privilege**: Only HTTPS access to the firewall UI.
+- **Defense in depth**: Tailscale ACLs + OPNsense firewall rules.
+- **Reversible**: Can be fully disabled without touching VLANs.
+
+### Conceptual Model
+- Tailscale creates an **encrypted overlay network (tailnet)** parallel to VLANs.
+- Remote devices **do not join VLANs**.
+- Traffic from Tailscale enters OPNsense via a dedicated interface (`tailscale0`).
+- Firewall rules decide **what tailnet identities may access**.
+```
+Remote Laptop
+   ↓ (Identity + E2EE)
+Tailscale Tailnet (100.x.x.x)
+   ↓
+OPNsense Tailscale Interface
+   ↓ (explicit firewall rule)
+OPNsense UI ONLY
+```
+### Single Tailnet Strategy
+- OPNsense joins **one tailnet only** (GitHub-linked, paid).
+- This tailnet represents the **infrastructure trust domain**.
+- Family / friends / services will **not** share this trust domain.
+
+Rationale:
+- Tailnets are security boundaries.
+- Infrastructure should belong to exactly one identity root.
+
+### Implementation Summary
+#### 1. Tailscale Plugin
+- Installed `os-tailscale` plugin on OPNsense.
+- Enabled service using a **pre-authentication key**.
+
+Pre-auth key settings:
+- Reusable: ✅ (for redeploy safety)
+- Expiration: 7 days
+- Ephemeral: ❌
+- Tags: ❌
+
+#### 2. Interface Assignment
+- Assigned `tailscale0` as an OPNsense interface (`Tailscale`).
+- IPv4 / IPv6 configuration: **None** (IP is managed by Tailscale daemon).
+
+Key nuance:
+> Tailscale interfaces are not Layer‑3 gateways; OPNsense does not assign their IPs.
+
+#### 3. Firewall Rule (MVP)
+**Goal:** Allow admin-only HTTPS access to the firewall itself.
+
+Final rule (conceptual):
+- Interface: `Tailscale`
+- Direction: `in`
+- Protocol: TCP
+- Source: Explicit tailnet IPv4 range
+- Destination: Firewall Tailscale IP
+- Port: 443 (HTTPS)
+
+Important nuance:
+- Built-in `Tailscale net` alias did **not** reliably match traffic.
+- Solution: define an explicit alias for the tailnet range.
+
+Alias:
+- Name: `TAILNET_V4`
+- Type: Network(s)
+- Value: `100.64.0.0/10`
+
+This restored deterministic firewall matching.
+
+#### 4. Validation
+Positive tests:
+- Remote access to `https://<OPNsense_Tailscale_IP>` works.
+
+Negative tests:
+- Cannot ping or access VLAN gateways.
+- No access to switch or LAN devices.
+
+Logs:
+- Firewall logs show **pass** on Tailscale interface for TCP/443.
+- No VLAN interfaces involved.
+
+### DERP vs Direct UDP (Understanding)
+- **Direct UDP**: preferred, peer‑to‑peer, lowest latency.
+- **DERP relay**: encrypted relay used when direct UDP fails.
+
+Key insight:
+> DERP is **not a security downgrade** — only a performance tradeoff.
+> For Layer 0 admin access, DERP is acceptable and expected on restrictive networks.
+
+### Security Guarantees Achieved
+- No inbound WAN exposure
+- No port forwarding
+- No VLAN trust expansion
+- Identity‑scoped access
+- Instant kill‑switch via Tailscale admin console
+
+### What Is _Not_ Done Yet (Intentionally)
+- No subnet routing
+- No exit nodes
+- No user onboarding
+- No service exposure
+- No MagicDNS reliance
+- No ACL complexity
+
+### Key Takeaway
+> **Tailscale provides an identity‑based control plane. VLANs protect infrastructure zones. They intersect only by explicit firewall intent.**
 ---
 
 ## 8. Security Baseline (Current)
