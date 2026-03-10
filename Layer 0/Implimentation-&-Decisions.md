@@ -1245,8 +1245,122 @@ Key insight:
 
 ### Key Takeaway
 > **Tailscale provides an identity‑based control plane. VLANs protect infrastructure zones. They intersect only by explicit firewall intent.**
----
 
+## Tailscale Remote Access Implementation  (ACLs)
+### 1. Executive Summary & Why This Matters
+Consolidated from **two separate tailnets** (admin + family) into **one single tailnet** with proper ACLs.  
+- Admin (me) = full control over everything (conservative on MGMT for now: only OPNsense UI).  
+- Family / member accounts = restricted to **only SERVICES VLAN30** (10.zz.zz.0/24).  
+
+This gives:
+- Secure remote access to internal services (Vintage Story, future apps)  
+- Strict VLAN segmentation (Tailscale ACLs + OPNsense firewall on tailscale0)  
+- Foundation for **full-tunnel privacy** when traveling (exit node – next step)  
+- All traffic will be logged/inspectable in the homelab (future IDS/IPS, Zeek, SIEM, ML models)
+
+Every choice supports the two pillars: **cybersecurity segmentation** + **high-quality labeled telemetry** for ML.
+
+### 2. Starting State (March 2026)
+- OPNsense on Protectli Vault (post-26.1)  
+- Tailscale plugin (`os-tailscale`) installed and joined to **two separate tailnets** (old admin tailnet + old family tailnet)  
+- Only one firewall rule existed on Tailscale interface: TCP from TAILNET_V4 alias → This Firewall port 443 (admin UI access)  
+- No subnet routes advertised  
+- No ACLs beyond default “allow everything”  
+- VLAN30 SERVICES already existed with Vintage Story server
+
+**Wall #1 we hit immediately:** Two tailnets = two separate trust domains → messy management, duplicate keys, hard to add family safely.  
+**How we overcame it:** Decided to consolidate into one paid/personal tailnet under BOYSABIO@github. Re-authenticated OPNsense with a new auth key. Old tailnets were left running temporarily for zero-downtime migration.
+
+### 3. Step-by-Step Journey – How We Actually Built It
+#### Step 3.1 – Single Tailnet Consolidation
+- Created/joined the single tailnet in Tailscale admin console.  
+- In OPNsense: VPN → Tailscale → Settings → re-authenticated with new tailnet key.  
+- All my devices (fedora, iphone-14, pc-sabio) automatically appeared in one list.  
+- **Replication command (if needed later):** `tailscale up --authkey=tskey-... --reset`
+#### Step 3.2 – Designing & Applying ACLs (The Core Security Decision)
+We used the **Visual Editor** first (easier for learning), then understood the JSON behind it.
+
+**Key learning moment:**  
+ACLs control “who is allowed to even attempt a connection”. The actual forwarding is still enforced by OPNsense firewall rules on the tailscale0 interface. This is defense-in-depth.
+
+**Exact steps we followed:**
+1. Went to Tailscale admin → Access controls → Visual editor.  
+2. Deleted the default “All users and devices → All users and devices” rule.  
+3. Added Rule 1 (Admin full access):  
+   - Source: `autogroup:admin` (or `autogroup:owner`)  
+   - Destination: All users and devices  
+   - Port/protocol: All  
+   - Note: “Admin full access – owner only”  
+4. Added Rule 2 (Member restricted):  
+   - Source: `autogroup:member`  
+   - Destination: `10.zz.zz.0/24`  
+   - Port/protocol: All  
+   - Note: “Family/members → SERVICES VLAN30 only”  
+5. Dragged admin rule above member rule (order matters).  
+6. Saved → waited 10–15 seconds for propagation.
+
+**Wall #2 we hit:** “Will 10.zz.zz.0/24 in destination actually work?”  
+**How we overcame it:** Realised Tailscale ACLs only say “you may send packets to these IPs”. The actual routing/forwarding still happens on OPNsense (tailscale0 → vlan0.30). This was the exact moment we understood the two-layer model.
+
+#### Step 3.3 – Subnet Routing (The Missing Piece)
+- In OPNsense: VPN → Tailscale → Advertised Routes tab → added `10.zz.zz.0/24` with description “Remote access to VLAN_30”.  
+- In Tailscale admin console: Machines → opnsense-fw → Subnets → approved the route.  
+- On remote Linux laptop: `sudo tailscale set --accept-routes` (needed once).
+
+**Wall #3:** Even with ACLs correct, nothing reached VLAN30 until the route was approved.  
+**Lesson:** Subnet advertisement + approval is a hard prerequisite.
+
+#### Step 3.4 – OPNsense Firewall Forwarding Rule
+Added second rule on Tailscale interface:  
+- Action: Pass  
+- Interface: Tailscale  
+- Source: TAILNET_V4 alias  
+- Destination: 10.zz.zz.0/24  
+- Protocol/Port: Any  
+- Log: Enabled  
+
+Existing UI rule (port 443) left untouched.
+
+#### Step 3.5 – Testing & Validation
+- Remote admin laptop (Linux): ping + SSH to 10.30.30.x → worked.  
+- Attempt to VLAN20 or MGMT → blocked by ACL (correct).  
+- Family/test account would only reach VLAN30 (not yet added).
+
+### 4. The Famous Logging Quirk (Wall #4 – Still Open)
+**What happened:**  
+When pinging or SSHing from remote Tailscale device to VLAN30 server:  
+- Tailscale interface Live View → almost nothing new (only background WireGuard UDP from OPNsense itself).  
+- VLAN30_SERV interface → shows source = gateway IP 10.zz.zz.1 → server IP.  
+
+**Why this happens (deep explanation):**  
+OPNsense (pf) does stateful forwarding + source IP rewriting when routing from tailscale0 to vlan0.30. Successful flows are handled by the state table and often skip per-packet logging on the inbound tun interface. This is a well-known pf logging optimisation on WireGuard/Tailscale setups.
+
+**How we confirmed it wasn’t broken:**  
+Packet capture on tailscale0 interface showed the **original** remote Tailscale IP (100.x.x.x) arriving correctly.  
+**Current status:** Parked as “known quirk”. Will be revisited with Zeek/Suricata mirroring (Layer 3) for full original 5-tuple visibility. No security impact — traffic is flowing and segmented correctly.
+
+**Replication tip:** Always run a quick packet capture on tailscale0 when debugging forwarded traffic.
+
+### 5. Current Architecture Diagram (text version)
+```
+Remote Device (Tailscale IP 100.x.x.x) 
+↓ (encrypted) OPNsense tailscale0 interface 
+↓ (ACL check + firewall rule) Routing decision → vlan0.30 (VLAN30 SERVICES) 
+↓ Vintage Story server (10.30.30.x)
+```
+### 6. Lessons Learned & Key Takeaways (for replication & CV)
+- Tailscale ACLs = identity gate, OPNsense firewall = network gate. Never rely on one alone.  
+- Always approve subnet routes in Tailscale console — easy to forget.  
+- Logging on tun interfaces is quirky — use packet capture for truth.  
+- Start conservative (MGMT only UI access) and expand later.  
+- Subnet routes + ACLs + future exit node = perfect combination for “logged & protected anywhere”.
+### 7. Next Step (already planned)
+Enable **exit node** on OPNsense so I can toggle full-tunnel mode on my phone/laptop when traveling. This will route **all** my traffic through home WAN for centralised logging/IDS protection.
+
+**Signed off** – 2026-03-10  
+This note is now the single source of truth for how remote access was built in Layer 0.
+
+---
 ## 8. Security Baseline (Current)
 
 ### Inbound
@@ -1265,8 +1379,6 @@ Key insight:
 ---
 
 ## 9. Known Limitations (Intentional)
-
-- No VLAN enforcement yet
 - No Proxmox or VMs deployed
 - No Wi-Fi behind firewall
 - No IDS/IPS
@@ -1275,41 +1387,5 @@ Key insight:
 
 These are **intentional deferrals**, not oversights.
 
----
-
-## 10. Immediate Next Steps (Layer 0 Continuation)
-
-1. Finalize this implementation document
-2. Migrate DHCP from dnsmasq → Kea
-3. Identify and document managed switch model & capabilities
-4. Map physical ports
-5. Create VLAN interfaces in OPNsense
-6. Implement switch VLAN configuration
-7. Apply minimal firewall policy per VLAN
-8. Validate segmentation
-
-Layer 1 (compute & virtualization) begins **only after step 6 is complete**.
 
 ---
-
-## 11. Key Learnings So Far
-
-- Firewalls are network operating systems, not just packet filters
-- DNS recursion vs forwarding has deep privacy implications
-- DHCP is identity assignment, not just convenience
-- Separating services increases control, observability, and safety
-- Layering infrastructure prevents rework
-- Understanding precedes implementation
-
----
-
-## 12. Layer 0 Status Summary
-
-**Design:** Complete  
-**Core Services:** Implemented  
-**Segmentation:** Pending  
-**Safety:** Baseline established  
-**Readiness for Layer 1:** Not yet (by design)
-
-Layer 0 remains the active focus.
-
