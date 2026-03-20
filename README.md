@@ -43,3 +43,26 @@ Layers 1–7 are designed but not yet built.
 2. **Real-World Relevance** — Enterprise-style networking and SOC-style telemetry
 3. **Data-Centric Thinking** — Logs, flows, and metrics are first-class citizens
 4. **Incremental Growth** — Stable core before stretch features
+
+---
+
+## Repository Security
+
+This repo uses [Gitleaks](https://github.com/gitleaks/gitleaks) to prevent accidental exposure of sensitive information (private IPs, API keys, tokens, etc.).
+
+**Two layers of protection are in place:**
+
+| Layer | Where it runs | What it does |
+| ----- | ------------- | ------------ |
+| Pre-commit hook | Locally before every commit | Scans staged files and blocks the commit if a leak is detected |
+| GitHub Actions CI | On every push / pull request | Scans the full history as a second safety net |
+
+Custom rules are defined in `.gitleaks.toml` to detect private IP address ranges (`192.168.x.x`, `10.x.x.x`, `172.16-31.x.x`, Tailscale CGNAT) in addition to the default secret patterns.
+
+**Useful commands:**
+
+```bash
+gitleaks detect --source . --verbose              # scan current files
+gitleaks detect --source . --log-opts="--all"      # scan full git history
+gitleaks protect --staged --verbose                # scan staged files (what the hook runs)
+```
