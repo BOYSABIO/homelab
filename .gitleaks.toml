@@ -1,0 +1,46 @@
+# Gitleaks configuration for homelab repo
+# Extends the default ruleset with custom IP detection
+
+[extend]
+useDefault = true
+
+# --- Custom rules: Private / sensitive IP addresses ---
+
+[[rules]]
+id = "private-ip-192"
+description = "Private IP address (192.168.x.x)"
+regex = '''192\.168\.\d{1,3}\.\d{1,3}'''
+tags = ["ip", "network"]
+
+[[rules]]
+id = "private-ip-10"
+description = "Private IP address (10.x.x.x)"
+regex = '''\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'''
+tags = ["ip", "network"]
+
+[[rules]]
+id = "private-ip-172"
+description = "Private IP address (172.16-31.x.x)"
+regex = '''172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}'''
+tags = ["ip", "network"]
+
+[[rules]]
+id = "tailscale-ip"
+description = "Tailscale CGNAT IP (100.64-127.x.x)"
+regex = '''100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}'''
+tags = ["ip", "network"]
+
+# --- Allowlist ---
+# Prevents Gitleaks from flagging its own config file
+# and common safe IPs like 127.0.0.1, 0.0.0.0
+
+[allowlist]
+paths = [
+  '''\.gitleaks\.toml$''',
+]
+regexTarget = "match"
+regexes = [
+  '''127\.0\.0\.1''',
+  '''0\.0\.0\.0''',
+  '''100\.64\.0\.0''',
+]
