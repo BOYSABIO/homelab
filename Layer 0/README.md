@@ -1,4 +1,4 @@
-# **Layer 0 — Network & Physical Foundation (Blueprint)**
+# Layer 0 — Network & Physical Foundation
 
 ### 1. Purpose of Layer 0
 Layer 0 defines the **physical devices**, **network topology**, and **segmentation model** of the homelab.
@@ -48,14 +48,13 @@ Modem
 ---
 ### 4. VLANs & Subnets
 
-| VLAN | Name        | Purpose                                | Subnet        |
-| ---- | ----------- | -------------------------------------- | ------------- |
-| 10   | Management  | Firewall, Proxmox, Switch, NAS         | 10.xx.xx.0/24 |
-| 20   | Trusted     | Personal devices (PC, laptop)          | 10.aa.bb.0/24 |
-| 30   | Services    | SIEM, Git, ML, internal services       | 10.cc.dd.0/24 |
-| 40   | SecurityLab | Kali, vulnerable systems, malware labs | 10.ee.ff.0/24 |
-| 50   | IoT         | Untrusted smart devices                | 10.gg.hh.0/24 |
-| 60   | DMZ         | Optional public-facing services        | 10.uu.uu.0/24 |
+| VLAN | Name        | Purpose                                | Subnet         |
+| ---- | ----------- | -------------------------------------- | -------------- |
+| 10   | Management  | Firewall, Proxmox, Switch, NAS         | 10.xx.xx.0/24  |
+| 20   | Trusted     | Personal devices (PC, laptop)          | 10.yy.yy.0/24  |
+| 30   | Services    | SIEM, Git, ML, internal services       | 10.zz.zz.0/24  |
+| 40   | SecurityLab | Kali, vulnerable systems, malware labs | 10.ww.ww.0/24  |
+| 50   | IoT         | Untrusted smart devices                | 10.vv.vv.0/24  |
 
 ---
 ### 5. Traffic Boundaries (Intent)
@@ -135,17 +134,18 @@ This keeps Layer 0 simple, secure, and operationally sane.
 ---
 
 ### 8. Milestones for Layer 0
-#### Milestone 1 — Logical Design
+
+#### Milestone 1 — Logical Design ✅
 - VLANs defined
 - Subnets defined
 - Traffic intent documented
 
-#### Milestone 2 — Hardware in Place
+#### Milestone 2 — Hardware in Place ✅
 - Firewall installed
 - Switch configured
 - VLANs enforced physically
 
-#### Milestone 3 — Secure Access
+#### Milestone 3 — Secure Access ✅
 - Tailscale running on firewall
 - Subnet routing enabled
 - ACLs defined for admin vs family
@@ -167,10 +167,10 @@ When all milestones are met → **Layer 0 is complete**
 - Identity-based access control as a modern alternative
 - The value of minimizing exposed attack surface
 - Designing for safety before adding vulnerable systems
-- Understanding the “network brain” concept
+- Understanding the "network brain" concept
 
 ---
-### 12. Layer 0 Summary
+### 10. Layer 0 Summary
 Layer 0 provides a **secure, segmented, and future-proof foundation**.
 
 It prioritizes:
@@ -180,3 +180,16 @@ It prioritizes:
 - Learning the *right abstractions*
 
 All higher layers build on this without rework.
+
+---
+### Detailed Documentation
+
+| Document | Scope |
+| -------- | ----- |
+| [[Physical-Topology]] | Hardware, IP ranges, switch port map, current devices |
+| [[Firewall-Rules]] | Design principles, per-VLAN firewall intent, key learnings |
+| [[VLANs]] | Concepts, tagged vs untagged, implementation, lessons learned |
+| [[DNS]] | Unbound recursive DNS, DNSSEC, log cheat sheet |
+| [[DHCP]] | Kea DHCP, static mappings, DORA, log cheat sheet |
+| [[IPv6]] | Internal ULA, SLAAC, attribution, security |
+| [[Tailscale]] | Remote access MVP, ACLs, subnet routing, exit node |
