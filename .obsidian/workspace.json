@@ -13,12 +13,24 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Layer 1/README.md",
+                "file": "Incidents/Tailscale - Lost Connectivity when using endpoint.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README"
+              "title": "Tailscale - Lost Connectivity when using endpoint"
+            }
+          },
+          {
+            "id": "fbda68a60277215b",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.12.7"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.12.7"
             }
           }
         ]
@@ -113,7 +125,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Layer 1/README.md",
+                "file": "Incidents/Tailscale - Lost Connectivity when using endpoint.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -123,7 +135,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for README"
+              "title": "Backlinks for Tailscale - Lost Connectivity when using endpoint"
             }
           },
           {
@@ -132,7 +144,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Layer 1/README.md",
+                "file": "README.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -175,7 +187,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Layer 1/README.md",
+                "file": "README.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -224,13 +236,23 @@
   },
   "active": "b716a7ee4b87fff7",
   "lastOpenFiles": [
-    "Layer 1/README.md",
+    "Layer 0/VLANs.md",
+    "Layer 0/Physical-Topology.md",
+    "Incidents/Tailscale - Lost Connectivity when using endpoint.md",
+    "Incidents/Incedents.md",
+    "Layer 0/Tailscale.md",
+    "Incidents",
+    "Layer 0/README.md",
+    "Layer 0/IPv6.md",
+    "Layer 0/Firewall-Rules.md",
+    "Layer 0/DNS.md",
+    "Layer 0/DHCP.md",
+    "about.md",
     "README.md",
+    "Layer 1/README.md",
     "BMO/Profiles/BMO.md",
     "BMO/Profiles",
     "BMO",
-    "Layer 1",
-    "Layer 0/README.md",
-    "about.md"
+    "Layer 1"
   ]
 }
