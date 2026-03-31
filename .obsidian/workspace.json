@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Incidents/Tailscale - Lost Connectivity when using endpoint.md",
+                "file": "Layer 1/Proxmox.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Tailscale - Lost Connectivity when using endpoint"
+              "title": "Proxmox"
             }
           },
           {
@@ -125,7 +125,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Incidents/Tailscale - Lost Connectivity when using endpoint.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -135,7 +134,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Tailscale - Lost Connectivity when using endpoint"
+              "title": "Backlinks"
             }
           },
           {
@@ -234,12 +233,17 @@
       "bmo-chatbot:BMO Chatbot": false
     }
   },
-  "active": "b716a7ee4b87fff7",
+  "active": "376db7ee8cf24ab7",
   "lastOpenFiles": [
-    "Layer 0/VLANs.md",
-    "Layer 0/Physical-Topology.md",
+    "Layer 1/Proxmox.md",
+    "Layer 1/README.md",
+    "README.md",
+    "OpenClaw.md",
+    "OPENCLAW_SETUP_LOG.md",
     "Incidents/Tailscale - Lost Connectivity when using endpoint.md",
     "Incidents/Incedents.md",
+    "Layer 0/VLANs.md",
+    "Layer 0/Physical-Topology.md",
     "Layer 0/Tailscale.md",
     "Incidents",
     "Layer 0/README.md",
@@ -248,8 +252,6 @@
     "Layer 0/DNS.md",
     "Layer 0/DHCP.md",
     "about.md",
-    "README.md",
-    "Layer 1/README.md",
     "BMO/Profiles/BMO.md",
     "BMO/Profiles",
     "BMO",

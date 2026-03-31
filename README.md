@@ -34,6 +34,7 @@ Layers 1–7 are designed but not yet built.
 | -------- | -------------- |
 | [[Vintage-Story-Server\|Vintage Story Server]] | Dedicated game server admin guide (Ubuntu, Tailscale networking) |
 | [[Local AI WebUI\|Local AI WebUI]] | Ollama + Open WebUI setup for LAN access |
+| [[OpenClaw\|OpenClaw]] | Local OpenClaw learning instance: identity, Telegram, Control UI, memory findings |
 
 ---
 
