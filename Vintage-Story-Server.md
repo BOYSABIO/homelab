@@ -54,6 +54,20 @@ sudo /home/vintagestory/server/server.sh command serverconfig whitelistmode off
 ```
 
 ---
+## Share Server With Friends (Two Methods)
+### Method 1 - Machine Invite Link
+1. Open machines page in admin console
+2. Find `vsserver` machine, open **menu** and press **share**
+3. Two options:
+	1. **Share by email**: Enter each friend's email address and select **Share** to send individual invite links.
+	2. **Share by link**: Select **Copy invite link**, optionally toggle **Reusable link** (usable up to 1,000 times), then copy and send the link to friends.
+4. Wait for each friend to accept the invite. Once accepted, the shared machine will appear in their Tailscale client as if it were on their own Tailnet.
+5. Client will: Install Tailscale and sign in. Accept the invite link received. In the game client, enter the server's Tailscale IP address and the appropriate game port.
+
+### Method 2 - Invite Client to Tailnet
+1. Add client as Tailnet member
+2. Client will: Install Tailscale and sign in. Accept the invite link received. In the game client, enter the server's Tailscale IP address and the appropriate game port.
+---
 ## World Management (Using .vcdbs Files)
 ### Upload a world from Windows
 ```powershell
