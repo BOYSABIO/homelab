@@ -1,0 +1,6 @@
+Host github-ghost
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_ghost
+    IdentitiesOnly yes
+    ServerAliveInterval 60

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "[*] Stopping DNScrypt..."
+sudo systemctl stop dnscrypt-proxy
+echo "[+] DNScrypt stopped."
+
+echo "[*] Starting Anonsurf..."
+sudo anonsurf start
+echo "[+] Anonsurf started!"

@@ -1,0 +1,12 @@
+# Instagram Password Brute Force
+
+## Installation
+```
+git clone https://github.com/gyanprabhat7/Instabruteforce.git
+cd Instabruteforce
+# Create python environment
+pip install -r requirements.txt
+python3 app.py
+```
+
+Set own disctionary or random word source to run brute force with password length and strength. Automatically attempts logins.

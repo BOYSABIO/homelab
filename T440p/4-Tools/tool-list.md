@@ -1,0 +1,5 @@
+1. NMAP (network scanning and discovery)
+2. WireShark (network protocol analysis)
+3. Metaspoit (exploitation framwork)
+4. Burp Suite (web application security testing)
+5. John The Ripper (Password Cracking)

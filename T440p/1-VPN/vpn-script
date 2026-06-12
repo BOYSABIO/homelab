@@ -1,0 +1,29 @@
+#!/bin/bash
+
+VPN_CONF_DIR="$HOME/.vpn/configs"
+VPN_PIDFILE="/tmp/openvpn.pid"
+
+case "$1" in
+  us)
+    sudo openvpn --config "$VPN_CONF_DIR/us-free-4.protonvpn.udp.ovpn" --daemon --writepid $VPN_PIDFILE
+    ;;
+  status)
+    if [ -f $VPN_PIDFILE ] && ps -p $(cat $VPN_PIDFILE) > /dev/null; then
+      echo "VPN is running (PID $(cat $VPN_PIDFILE))"
+    else
+      echo "VPN is not running"
+    fi
+    ;;
+  off)
+    if [ -f $VPN_PIDFILE ]; then
+      sudo kill $(cat $VPN_PIDFILE) && sudo rm $VPN_PIDFILE
+      echo "VPN disconnected"
+    else
+      echo "VPN is not running"
+    fi
+    ;;
+  *)
+    echo "Usage: vpn {us|status|off}"
+    ;;
+esac
+
