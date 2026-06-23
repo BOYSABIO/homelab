@@ -159,3 +159,38 @@ The MCP server itself is lightweight — a small Python or Node service running 
 - Spare Optiplex + drives
 - TrueNAS SCALE ISO
 - Layer 0 VLAN already configured — just add a new DHCP static mapping and firewall rule for the NAS IP
+
+---
+
+## 5. Jellyfin — Personal Media Server
+**Layer:** Cross-cutting (Personal Services — Services VLAN)
+**Status:** Planned — after NAS storage is in place
+
+### What it is
+Self-hosted media server for music, video, and podcasts. Accessible on LAN and via Tailscale on mobile.
+
+### Stack
+- **Jellyfin** — media server, Docker container in Proxmox on VLAN30
+- **Finamp** — mobile music client
+
+### Notes
+- Mother asked about hosting podcasts here
+- Good personal services addition once NAS provides the storage layer
+
+### Links
+- [Jellyfin](https://jellyfin.org/) | [Finamp (GitHub)](https://github.com/UnicornsOnLSD/finamp)
+
+---
+
+## Security Layer Resources (Layer 3/4 — reference for when building begins)
+
+| Resource | What it is | Link |
+|----------|-----------|------|
+| HackTheBox | Best platform for hands-on offensive security learning. Was doing rooms but stalled on fundamentals. Approach: targeted rooms by skill, not broad grinding. | [hackthebox.com](https://account.hackthebox.com/login) |
+| PortSwigger Web Security Academy | XSS, SQLi, web app security — free and very thorough | [portswigger.net](https://portswigger.net/web-security/cross-site-scripting/cheat-sheet) |
+| iha089 Toolkit | OSINT and social footprinting tool list | [iha089.org](https://iha089.org/toolkit/osint-social-footprinting/social-media-discovery/) |
+| Phrack Magazine | Classic underground security research publication | [phrack.org](https://phrack.org/news) |
+| Darknet Diaries | Security incident/history podcast — good background context | [darknetdiaries.com](https://darknetdiaries.com/episode/) |
+| Malwarebytes Labs | Alternate Data Streams post and other malware research | [malwarebytes.com/blog](https://www.malwarebytes.com/blog/news/2015/07/introduction-to-alternate-data-streams) |
+| Elastic 9 | ELK stack / search + observability — MarshalWace recommended this specifically. Core SIEM candidate for Layer 3. | [elastic.co](https://www.elastic.co/blog/whats-new-elastic-9-0-0) |
+| LM Studio | Local LLM runner — alternative to Ollama with more features. Evaluate when building out local AI stack. | [lmstudio.ai](https://lmstudio.ai/) |

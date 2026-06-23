@@ -2,14 +2,16 @@
 
 A deliberately architected homelab built layer by layer around two core pillars: **cybersecurity** and **data science**. Personal and self-hosted services are first-class citizens but never compromise segmentation or learning goals.
 
-For the full architectural overview (all 8 layers, design philosophy, core vs stretch goals), see [[about|Architecture Overview]].
+For the full architectural overview (all 8 layers, design philosophy, core vs stretch goals), see [[PROJECTS/Homelab/homelab/about|Architecture Overview]].
 
 ---
 
 ## Current Status
 
 **Layer 0 — Physical & Network Foundation** is implemented and stable.
-Layers 1–7 are designed but not yet built.
+**Layer 1 — Virtualization & Compute** is in progress — Proxmox is running with three LXC containers deployed (webapp, LibreTranslate, Huckleberry habitat model). k3s, Windows VMs, and snapshot discipline not yet in place.
+**Layer 5 — Data Science & ML** has its first component: the Huckleberry habitat suitability model (FastAPI + MLflow) deployed as a Dockerized inference API on its own LXC.
+Layers 2–4 and 6–7 are designed but not yet built.
 
 ---
 
@@ -17,21 +19,41 @@ Layers 1–7 are designed but not yet built.
 
 | Document | What It Covers |
 | -------- | -------------- |
-| [[Layer 0/README\|Overview & Blueprint]] | Target architecture, VLANs, subnets, milestones, hardware roles |
-| [[Layer 0/Physical-Topology\|Physical Topology]] | Current hardware, IP ranges, switch port map, end devices |
-| [[Layer 0/Firewall-Rules\|Firewall Rules]] | Design principles, per-VLAN intent, key learning moments |
-| [[Layer 0/VLANs\|VLANs]] | Concepts, implementation, tagged vs untagged, lessons learned |
-| [[Layer 0/DNS\|DNS]] | Unbound recursive resolver, DNSSEC, log cheat sheet |
-| [[Layer 0/DHCP\|DHCP]] | Kea DHCP, static mappings, DORA handshake, log cheat sheet |
-| [[Layer 0/IPv6\|IPv6]] | Internal ULA design, SLAAC, attribution, security |
-| [[Layer 0/Tailscale\|Tailscale & Remote Access]] | MVP setup, ACLs, subnet routing, exit node |
+| [[PROJECTS/Homelab/homelab/Layer 0/README\|Overview & Blueprint]] | Target architecture, VLANs, subnets, milestones, hardware roles |
+| [[Physical-Topology\|Physical Topology]] | Current hardware, IP ranges, switch port map, end devices |
+| [[Firewall-Rules\|Firewall Rules]] | Design principles, per-VLAN intent, key learning moments |
+| [[VLANs\|VLANs]] | Concepts, implementation, tagged vs untagged, lessons learned |
+| [[DNS\|DNS]] | Unbound recursive resolver, DNSSEC, log cheat sheet |
+| [[DHCP\|DHCP]] | Kea DHCP, static mappings, DORA handshake, log cheat sheet |
+| [[IPv6\|IPv6]] | Internal ULA design, SLAAC, attribution, security |
+| [[Tailscale\|Tailscale & Remote Access]] | MVP setup, ACLs, subnet routing, exit node |
 
 ---
 
-## Service Documentation
+## Layer 1 Documentation
 
 | Document | What It Covers |
 | -------- | -------------- |
+| [[PROJECTS/Homelab/homelab/Layer 1/README\|Overview & Container Inventory]] | Layer 1 scope, status, full container inventory across all conceptual layers |
+| [[Proxmox\|Proxmox]] | Hypervisor install, VLAN-aware bridge fix, switch trunk config — the host itself |
+| [[Proxmox (Containers)\|Proxmox (Containers)]] | LXC creation, webapp + LibreTranslate + Huckleberry container setup, the firewall/VLAN bug |
+
+---
+
+## Layer 5 Documentation
+
+| Document | What It Covers |
+| -------- | -------------- |
+| [[PROJECTS/Homelab/homelab/Layer 5/README\|Overview & Status]] | Layer 5 scope, what's deployed vs. planned |
+| [[Huckleberry-Habitat-Model\|Huckleberry Habitat Model]] | ML inference API + MLflow, deployed to a Proxmox LXC — settings, stack, update flow, troubleshooting |
+
+---
+
+## Personal & Self-Hosted Services Documentation
+
+| Document | What It Covers |
+| -------- | -------------- |
+| [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/README\|Overview]] | Cross-cutting philosophy, full service inventory (incl. webapp/LibreTranslate, documented under Layer 1) |
 | [[Vintage-Story-Server\|Vintage Story Server]] | Dedicated game server admin guide (Ubuntu, Tailscale networking) |
 | [[Local AI WebUI\|Local AI WebUI]] | Ollama + Open WebUI setup for LAN access |
 | [[OpenClaw\|OpenClaw]] | Local OpenClaw learning instance: identity, Telegram, Control UI, memory findings |

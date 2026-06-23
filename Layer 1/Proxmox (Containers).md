@@ -1,6 +1,20 @@
 # Proxmox Homelab Setup — Full Documentation
 ### From Fresh Install to Running a Next.js Web App with LibreTranslate
 ---
+
+## Container Inventory
+
+Three LXCs run on this Proxmox host today. This doc covers the full build-out for the first two; Huckleberry's full deploy detail lives in its own Layer 5 doc (it's an ML inference API, not a personal service) — this doc only covers its LXC-level settings, same as the other two.
+
+| CT ID | Hostname | Service | Deep-dive |
+| --- | --- | --- | --- |
+| 100 | webapp | Language Learning App (Next.js + PM2) | § [Webapp Container Setup](#webapp-container-setup) below |
+| 101 | libretranslate | LibreTranslate (Docker) | § [LibreTranslate Container Setup](#libretranslate-container-setup) below |
+| 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow (Docker Compose) | § [Huckleberry Container Setup](#huckleberry-container-setup) below + [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model\|full Layer 5 doc]] |
+
+See [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for how these three map onto Layer 1 vs. Personal Services vs. Layer 5.
+
+---
 ## Table of Contents
 
 1. [Network Architecture](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#network-architecture)
@@ -23,8 +37,9 @@
 5. [LibreTranslate Container Setup](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#libretranslate-container-setup)
     - [Installing Docker](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#installing-docker)
     - [Running LibreTranslate](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#running-libretranslate)
-6. [MGMT VLAN Internet Access](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#mgmt-vlan-internet-access)
-7. [Key Caveats and Lessons Learned](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#key-caveats-and-lessons-learned)
+6. [Huckleberry Container Setup](#huckleberry-container-setup)
+7. [MGMT VLAN Internet Access](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#mgmt-vlan-internet-access)
+8. [Key Caveats and Lessons Learned](https://claude.ai/chat/810aff84-3cfe-4e8a-a1f6-7abb91461a07#key-caveats-and-lessons-learned)
 
 ---
 ## Network Architecture
@@ -38,6 +53,7 @@
 - **Proxmox host IP**: `10.x.x.3` (VLAN10)
 - **Webapp LXC**: `10.x.x.10` (VLAN30)
 - **LibreTranslate LXC**: `10.x.x.11` (VLAN30)
+- **Huckleberry LXC**: `10.x.x.12` (VLAN30) — see [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]]
 - **Router/Gateway for VLAN30**: `10.x.x.1`
 - **Firewall**: OPNsense handles inter-VLAN routing and firewall rules
 - **Proxmox is connected via a trunk port** — the physical NIC carries tagged VLANs, and `vmbr0` is a VLAN-aware bridge (`bridge-vids 2-4094`)
@@ -152,6 +168,8 @@ These settings were used for both containers in this setup:
 | Gateway                 | 10.x.x.1          | OPNsense VLAN30 gateway                         |
 | Firewall                | ❌ Disabled        | See caveat below — critical                     |
 | DNS                     | Use host settings | Inherits from Proxmox host                      |
+
+> Huckleberry (CT 103) uses a heavier profile — 2 cores / 4096 MiB RAM / 20GB+ disk — since it runs MLflow + FastAPI together. Same VLAN, firewall, and DNS settings as above. Full settings table in [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]].
 
 ---
 ### The Proxmox Firewall + VLAN Bug
@@ -389,6 +407,14 @@ LibreTranslate is now accessible from the webapp container at `http://10.x.x.11:
 > **Resource note:** LibreTranslate uses approximately 1-2GB RAM per language loaded. This setup loads only English and German (`en,de`), which is why 2048 MiB was allocated to this container. Adding more languages requires more RAM.
 
 > **Restart policy:** `restart: always` ensures LibreTranslate automatically restarts when the container reboots.
+
+---
+## Huckleberry Container Setup
+**Container:** CT 103 | IP: `10.x.x.12` | Hostname: `huckleberry`
+
+The third LXC on this host runs the Huckleberry habitat suitability model — a Dockerized FastAPI inference API backed by an MLflow registry. It uses the same base LXC conventions as webapp/LibreTranslate (unprivileged, nesting enabled, VLAN 30, Proxmox firewall disabled — see [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for the inventory), but with a heavier resource allocation (2 cores / 4096 MiB RAM) since it runs two Docker Compose services at once.
+
+This doc only covers the LXC-level shape. Full deploy detail — Docker Compose setup, MLflow seeding, the helper scripts, LAN access, troubleshooting — lives in its own doc since it's a Layer 5 (Data Science & ML) concern, not a Layer 1 one: see [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]].
 
 ---
 ## MGMT VLAN Internet Access
