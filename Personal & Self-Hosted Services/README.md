@@ -20,6 +20,7 @@ Per the [[PROJECTS/Homelab/homelab/about|Architecture Overview]]'s "Personal & S
 | Vintage Story Server | Dedicated machine, TRUSTED VLAN (routed to SERVICES via Tailscale/OPNsense for remote play) | ✅ Deployed | [[Vintage-Story-Server\|Vintage Story Server]] |
 | Local AI WebUI (Ollama + Open WebUI) | Workstation, Docker Desktop — not Proxmox | ✅ Deployed | [[Local AI WebUI\|Local AI WebUI]] |
 | OpenClaw | Workstation, local — not yet wired into Layer 0 segmentation | 🔧 Learning / setup phase | [[OpenClaw\|OpenClaw]] |
+| Discord Music Bot | Proxmox LXC, CT 104, VLAN 30 (SERVICES) | ✅ Deployed | [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/Discord-Music-Bot\|Discord-Music-Bot]] |
 
 ### Notes
 

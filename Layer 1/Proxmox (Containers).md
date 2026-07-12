@@ -4,13 +4,14 @@
 
 ## Container Inventory
 
-Three LXCs run on this Proxmox host today. This doc covers the full build-out for the first two; Huckleberry's full deploy detail lives in its own Layer 5 doc (it's an ML inference API, not a personal service) — this doc only covers its LXC-level settings, same as the other two.
+Four LXCs run on this Proxmox host today. This doc covers the full build-out for the first two; Huckleberry's full deploy detail lives in its own Layer 5 doc (it's an ML inference API, not a personal service) — this doc only covers its LXC-level settings, same as the other two.
 
 | CT ID | Hostname | Service | Deep-dive |
 | --- | --- | --- | --- |
 | 100 | webapp | Language Learning App (Next.js + PM2) | § [Webapp Container Setup](#webapp-container-setup) below |
 | 101 | libretranslate | LibreTranslate (Docker) | § [LibreTranslate Container Setup](#libretranslate-container-setup) below |
 | 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow (Docker Compose) | § [Huckleberry Container Setup](#huckleberry-container-setup) below + [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model\|full Layer 5 doc]] |
+| 104 | discord-bot | Discord Music Bot (Docker Compose: bot + Lavalink) | [[PROJECTS/discord-music-bot/docs/PROXMOX_DEPLOY\|PROXMOX_DEPLOY.md]] |
 
 See [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for how these three map onto Layer 1 vs. Personal Services vs. Layer 5.
 
@@ -54,6 +55,7 @@ See [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for how these thr
 - **Webapp LXC**: `10.x.x.10` (VLAN30)
 - **LibreTranslate LXC**: `10.x.x.11` (VLAN30)
 - **Huckleberry LXC**: `10.x.x.12` (VLAN30) — see [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]]
+- **Discord Music Bot LXC**: `10.x.x.14` (VLAN30) — see [[PROJECTS/discord-music-bot/docs/PROXMOX_DEPLOY|PROXMOX_DEPLOY.md]]
 - **Router/Gateway for VLAN30**: `10.x.x.1`
 - **Firewall**: OPNsense handles inter-VLAN routing and firewall rules
 - **Proxmox is connected via a trunk port** — the physical NIC carries tagged VLANs, and `vmbr0` is a VLAN-aware bridge (`bridge-vids 2-4094`)
