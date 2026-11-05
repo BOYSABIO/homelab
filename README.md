@@ -55,6 +55,7 @@ Layers 2–4 and 6–7 are designed but not yet built.
 | -------- | -------------- |
 | [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/README\|Overview]] | Cross-cutting philosophy, full service inventory (incl. webapp/LibreTranslate, documented under Layer 1) |
 | [[Vintage-Story-Server\|Vintage Story Server]] | Dedicated game server admin guide (Ubuntu, Tailscale networking) |
+| [[MuttMetrics-Server\|MuttMetrics Server]] | Always-on host for a small business app: placement, access model, backups, hardening |
 | [[Local AI WebUI\|Local AI WebUI]] | Ollama + Open WebUI setup for LAN access |
 | [[OpenClaw\|OpenClaw]] | Local OpenClaw learning instance: identity, Telegram, Control UI, memory findings |
 

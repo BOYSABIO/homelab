@@ -33,6 +33,8 @@ Port 7 was also explicitly **excluded from VLAN1** (the legacy system VLAN), for
 ### Important Observation About VLAN1
 The switch has a legacy VLAN1 called "System VLAN" that contains all ports as untagged members by default. This was left in place from the original flat network setup and couldn't be cleanly removed because TP-Link Omada switches treat VLAN1 as a built-in default. Rather than fighting it, the approach was to simply not add Port 7 (or Port 1) to it, keeping it as a harmless legacy artifact that no infrastructure port touches.
 
+> **Correction (2026-11-05):** it's harmless for the trunks, not for the access ports. Access ports that Admit All and are still VLAN1 members will accept frames tagged VLAN 1 and pass them to the other VLAN1 ports without going through the firewall. See [[Physical-Topology]] § "VLAN1 is not as harmless as it looks".
+
 ---
 ## 3. OPNsense Configuration — Firewall Rule for Web UI Access
 By design, VLAN10 (Management) is not reachable from VLAN20 (Trusted). This is intentional and documented in the Layer 0 firewall rules — management interfaces should not be freely accessible from user devices. However, Proxmox's web UI runs on port 8006 and needs to be reachable from the primary workstation on VLAN20.

@@ -8,7 +8,7 @@ Four LXCs run on this Proxmox host today. This doc covers the full build-out for
 
 | CT ID | Hostname | Service | Deep-dive |
 | --- | --- | --- | --- |
-| 100 | webapp | Language Learning App (Next.js + PM2) | § [Webapp Container Setup](#webapp-container-setup) below |
+| 100 | webapp | Cveda (Next.js + PM2) | § [Webapp Container Setup](#webapp-container-setup) below |
 | 101 | libretranslate | LibreTranslate (Docker) | § [LibreTranslate Container Setup](#libretranslate-container-setup) below |
 | 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow (Docker Compose) | § [Huckleberry Container Setup](#huckleberry-container-setup) below + [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model\|full Layer 5 doc]] |
 | 104 | discord-bot | Discord Music Bot (Docker Compose: bot + Lavalink) | [[PROJECTS/discord-music-bot/docs/PROXMOX_DEPLOY\|PROXMOX_DEPLOY.md]] |

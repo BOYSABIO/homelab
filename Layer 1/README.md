@@ -22,7 +22,7 @@ This is the substrate-level view — what's actually running on Proxmox, regardl
 
 | CT ID | Hostname | Service | Belongs to | Deep-dive doc |
 | --- | --- | --- | --- | --- |
-| 100 | webapp | Language Learning App (Next.js + PM2) | Personal & Self-Hosted Services | [[Proxmox (Containers)\|Proxmox (Containers)]] § Webapp Container Setup |
+| 100 | webapp | Cveda (Next.js + PM2) | Personal & Self-Hosted Services | [[Proxmox (Containers)\|Proxmox (Containers)]] § Webapp Container Setup |
 | 101 | libretranslate | LibreTranslate (Docker) | Personal & Self-Hosted Services | [[Proxmox (Containers)\|Proxmox (Containers)]] § LibreTranslate Container Setup |
 | 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow | Layer 5 — Data Science & ML | [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model\|Huckleberry Habitat Model]] |
 | 104 | discord-bot | Discord Music Bot (Docker Compose: bot + Lavalink) | Personal & Self-Hosted Services | [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/Discord-Music-Bot\|Discord-Music-Bot]] |

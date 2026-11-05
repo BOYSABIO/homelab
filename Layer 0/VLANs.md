@@ -23,26 +23,19 @@
 ## 1. Network Segmentation — Current Status
 
 ### VLANs
-- **Status:** Designed but not implemented
-- **Reason:** Waiting for:
-  - Switch configuration
-  - Trunk/access port setup
-  - Kea DHCP migration
+- **Status:** Implemented (VLANs 10–50 on OPNsense and the switch; Kea DHCP per VLAN)
+- **History:** this section used to read "designed but not implemented". The rest of this document is the story of getting from there to here.
 
-### Physical Switch Port Map (Current)
-Switch: TP-Link Omada SG2210P
-
-Port 1 → OPNsense firewall (LAN interface)
-Port 2 → Main PC (Trusted endpoint)
-Port 3 → Docking station (intermittent laptop)
-Port 4 → Vintage Story server
-Port 5–8 → Unused
-SFP ports → Unused
+### Physical Switch Port Map
+The current port map, with each port's VLAN membership, lives in [[Physical-Topology]] (one source of truth). In short:
+- Ports 1 and 7 are trunks (OPNsense and Proxmox).
+- Ports 2–3 are TRUSTED.
+- Port 4 is SERVICES, with an unmanaged switch behind it (Vintage Story server + MuttMetrics server).
+- Ports 5, 6 and 8 are prepared access ports for CLAB, GUEST and MGMT.
 
 ### Current Reality
-- Network is flat
-- Segmentation enforced only by physical separation
-- Firewall rules currently apply to single LAN interface
+- Traffic between VLANs is routed and filtered by OPNsense ([[Firewall-Rules]])
+- Traffic *inside* one VLAN never reaches the firewall. That matters on port 4, where two servers share an unmanaged switch: host firewalls do the separating there
 
 ---
 
