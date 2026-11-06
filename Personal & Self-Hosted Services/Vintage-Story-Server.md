@@ -64,9 +64,12 @@ sudo /home/vintagestory/server/server.sh command serverconfig whitelistmode off
 4. Wait for each friend to accept the invite. Once accepted, the shared machine will appear in their Tailscale client as if it were on their own Tailnet.
 5. Client will: Install Tailscale and sign in. Accept the invite link received. In the game client, enter the server's Tailscale IP address and the appropriate game port.
 
-### Method 2 - Invite Client to Tailnet
-1. Add client as Tailnet member
-2. Client will: Install Tailscale and sign in. Accept the invite link received. In the game client, enter the server's Tailscale IP address and the appropriate game port.
+### Method 2 - Invite Client to Tailnet (what we use)
+1. Add the client as a tailnet **Member**.
+2. The client installs Tailscale and signs in. In the game client they enter **`vsserver:42420`** (or `vsserver.<tailnet>.ts.net:42420` if the short name doesn't resolve).
+3. Nothing else to configure: the tailnet policy already lets members, and the close group, reach the game port on `tag:vsserver` (see *Tailscale Setup* below).
+
+> Method 1 (sharing the machine) is untested since the server was tagged (2026-11-06). Members are the supported path.
 ---
 ## World Management (Using .vcdbs Files)
 ### Upload a world from Windows
@@ -140,22 +143,38 @@ tailscale ip -4
 ```
 Example result:
 100.x.x.x
+### Tag the server (done 2026-11-06)
+
+The server runs Tailscale itself as `vsserver`, **tagged `tag:vsserver`** (Machines → ⋯ → Edit ACL tags). Two reasons:
+
+- **A user-owned server inherits its owner's rights.** Before tagging it belonged to the admin account, so the game server could reach everything the admin can: every device and subnet, on every port. A tagged device has no owner, so it can only *receive* what the policy grants and reach nothing. Verified: from the server, the MuttMetrics app now times out.
+- **Tagged devices have key expiry off,** so the server doesn't silently drop off the tailnet after months.
+
+Keep Tailscale updated on it: `sudo tailscale set --auto-update`.
+
 ### Connect via Tailscale from any device
 
-The VS server sits on VLAN30. Remote players connect via OPNsense's Tailscale subnet routing — **not** directly to the server's own Tailscale IP.
+Players connect **by name, straight to the server's own Tailscale node**:
+```
+vsserver:42420
+```
 
-Connect using:
-```
-10.30.x.x:42420
-```
+The tailnet policy grants members and the close group `tcp:42420` and `udp:42420` on `tag:vsserver`, and nothing else; a policy test checks it ([[Tailscale]] §7).
+
+*History:* from 2026-03 players had to use the server's VLAN 30 address through OPNsense's subnet route (`10.30.x.x:42420`). The only member rule then was "members → `10.zz.zz.0/24`", which covers the LAN address but not the server's Tailscale address, so connecting by name stopped working once the default allow-all policy was replaced. That broad rule also let every member reach every port on every VLAN 30 host, and it was removed on 2026-11-06.
+
+### First new player: if they can't connect
+1. Their Tailscale is on, and *Use Tailscale DNS* is on.
+2. Try `vsserver:42420`, then the full `vsserver.<tailnet>.ts.net:42420`.
+3. On the server, while they try: `sudo journalctl -u tailscaled -f | grep -i drop`. A `Drop … :42420` line means the policy doesn't cover their account (admin console → Access controls → *Preview rules* for them). No line at all means their Tailscale isn't connected.
 
 ### Switching tailnets
 If you need to move the server to a different tailnet:
 ```bash
 sudo tailscale logout
-sudo tailscale up 
+sudo tailscale up --hostname=vsserver --advertise-tags=tag:vsserver
 ```
-Authenticate via the link provided, then verify connectivity.
+Authenticate via the link provided (the tag must exist in the new tailnet's `tagOwners`), then verify connectivity.
 
 ---
 ## Useful Maintenance Commands

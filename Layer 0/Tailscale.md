@@ -372,12 +372,19 @@ These are the internal subnets that OPNsense advertises to the tailnet, allowing
 #### 3.3 Tailscale ACL Rules
 _Tailscale Admin Console > Access Controls_
 
-| Source | Destination | Purpose |
-| ------ | ----------- | ------- |
-| `autogroup:admin` | `*` | Full access for admins — default rule |
-| `autogroup:member` | `10.zz.zz.0/24` | Members can access VLAN30 services (game server etc.) |
-| `autogroup:owner` | `10.yy.yy.0/24` | Owner can access VLAN20 trusted network remotely |
-| `autogroup:owner` | `autogroup:internet` | Owner can use OPNsense as an exit node |
+Current grants (2026-11-06; full pattern and reasoning in §7):
+
+| Source | Destination | Ports | Purpose |
+| ------ | ----------- | ----- | ------- |
+| `autogroup:admin` | `*` | all | Full access for admins |
+| `autogroup:owner` | `10.yy.yy.0/24` | all | Owner can access VLAN20 trusted network remotely |
+| `autogroup:owner` | `autogroup:internet` | all | Owner can use OPNsense as an exit node |
+| `autogroup:owner` | `10.xx.xx.0/24` | all | Owner remote access to MGMT |
+| `autogroup:member`, `group:<close-group>` | `tag:vsserver` | `tcp:42420`, `udp:42420` | Vintage Story, by name |
+| `group:<close-group>` | `tag:muttmetrics` | `tcp:443` | The MuttMetrics app |
+| `group:<close-group>` | a host on VLAN20 | one game port | A game server on the workstation |
+
+*Removed 2026-11-06:* `autogroup:member` → `10.zz.zz.0/24` (all ports). It gave every member every port on every VLAN30 host, and was replaced by the per-server tags above.
 
 The ACL JSON for the exit node rule:
 
@@ -502,3 +509,41 @@ Exit node traffic does not show up on the Tailscale interface in live view logs 
 - [ ] Configure **Zeek** on the Tailscale interface for detailed traffic analysis with user attribution
 - [ ] Investigate tunneling **IPv6 through the exit node** to prevent IPv6 leaks
 - [ ] Consider adding exit node access for `autogroup:admin` in Tailscale ACLs if other admins need it
+
+---
+
+## 7. Tagged servers and per-port grants (2026-11)
+
+### 7.1 Why tags
+- **A device's rights follow its owner.** A server logged in as the admin account can reach everything the admin can, so a compromised game server would have admin-level reach into the tailnet. **A tagged device has no owner:** it only receives what grants allow and reaches nothing by itself (verified on `vsserver`: after tagging, it can't reach the MuttMetrics app).
+- **Tagged devices have key expiry disabled automatically.** An expired server key fails silently, months later.
+- **Rules name the role, not the address.** `tag:muttmetrics` keeps working if the box gets a new Tailscale IP.
+
+### 7.2 The pattern (used for `tag:muttmetrics` and `tag:vsserver`)
+1. `tagOwners`: `"tag:<name>": ["autogroup:admin"]`. The tag must exist before a device can use it.
+2. Tag the device: `tailscale up --advertise-tags=tag:<name>` when joining, or Machines → ⋯ → *Edit ACL tags* for an existing one.
+3. **One grant per service, port-specific:** `src` = who, `dst` = `tag:<name>`, `ip` = exactly the ports.
+4. **A policy test typed from the requirement** (who must get in, and what must stay shut), **not copied from the rule.** A test copied from the rule repeats its typo and then passes while protecting it (it happened: `433` instead of `443` in both).
+5. The rule and its test change **in one save** (JSON editor). The visual editor saves them one at a time, and each save is checked against the other.
+6. Check *Preview rules* for a real member account. Admins can reach everything, so an admin's device proves nothing.
+
+### 7.3 Lessons
+- **A group test only passes if *every* account in the group gets through.** A test from `group:<close-group>` failed against a rule for `autogroup:member` because one account in the group isn't counted as a member. The rule now names both.
+- **Subnet routes vs a device's own Tailscale address:** a grant to `10.zz.zz.0/24` covers a server's LAN address (through OPNsense), not its `100.x` address. That's why connecting "by name" broke for members once allow-all was replaced.
+- **Traffic through the subnet router arrives at the server as the router's LAN address,** so a host firewall can't tell members apart on that path. A device's own Tailscale node keeps the identity.
+- **A typed address without `https://` goes to port 80.** If only 443 is granted, the page just hangs.
+
+### 7.4 Debugging access
+| Tool | Shows | Doesn't show |
+|---|---|---|
+| `sudo journalctl -u tailscaled -f \| grep -i drop` (on the destination) | **Exactly what the policy drops**: source, port, "no rules matched" | — |
+| *Preview rules* (admin console) | What an account is allowed to reach | Whether their device is online |
+| `tailscale status` | Who is online, direct vs relayed (`relay "fra"`) | Policy decisions |
+| `tailscale ping <device>` | That the tunnel works | **Ignores the policy**: a pong proves nothing about access |
+| `tcpdump -i tailscale0` | Traffic to the kernel's tunnel interface | **Not `tailscale serve` traffic**, which `tailscaled` handles internally |
+
+### 7.5 `tailscale serve` and HTTPS certificates
+- `tailscale serve --bg --https=443 http://127.0.0.1:<port>` puts a real certificate in front of a localhost service, reachable from the tailnet only.
+- Enabling HTTPS certificates is tailnet-wide, but a name only becomes public when that device actually requests a certificate. **Every name that gets one lands in public Certificate Transparency logs, permanently:** check the tailnet DNS name before the first one, and only certify devices whose names you don't mind being public.
+- **Leave Funnel off.** Turning it on publishes services to the internet *and* edits the policy so every member may do the same.
+

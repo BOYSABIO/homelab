@@ -17,8 +17,8 @@ Per the [[PROJECTS/Homelab/homelab/about|Architecture Overview]]'s "Personal & S
 | ------- | ------- | ------ | --- |
 | Cveda (webapp) | Proxmox LXC, CT 100, VLAN 30 (SERVICES) | ✅ Deployed | [[Proxmox (Containers)\|Proxmox (Containers)]] (Layer 1) § Webapp Container Setup |
 | LibreTranslate | Proxmox LXC, CT 101, VLAN 30 (SERVICES) | ✅ Deployed | [[Proxmox (Containers)\|Proxmox (Containers)]] (Layer 1) § LibreTranslate Container Setup |
-| Vintage Story Server | Dedicated machine, VLAN 30 (SERVICES), switch port 4 via an unmanaged switch | ✅ Deployed | [[Vintage-Story-Server\|Vintage Story Server]] |
-| MuttMetrics server | Dedicated OptiPlex (Debian), VLAN 30 (SERVICES), switch port 4 via an unmanaged switch | 🔧 Setup (muttmetrics#93) | [[MuttMetrics-Server\|MuttMetrics Server]] |
+| Vintage Story Server | Dedicated machine, VLAN 30 (SERVICES), switch port 4 via an unmanaged switch; Tailscale `tag:vsserver` | ✅ Deployed | [[Vintage-Story-Server\|Vintage Story Server]] |
+| MuttMetrics server | Dedicated OptiPlex (Debian), VLAN 30 (SERVICES), switch port 4 via an unmanaged switch; Tailscale `tag:muttmetrics` | ✅ Live (muttmetrics#93) | [[MuttMetrics-Server\|MuttMetrics Server]] |
 | Local AI WebUI (Ollama + Open WebUI) | Workstation, Docker Desktop — not Proxmox | ✅ Deployed | [[Local AI WebUI\|Local AI WebUI]] |
 | OpenClaw | Workstation, local — not yet wired into Layer 0 segmentation | 🔧 Learning / setup phase | [[OpenClaw\|OpenClaw]] |
 | Discord Music Bot | Proxmox LXC, CT 104, VLAN 30 (SERVICES) | ✅ Deployed | [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/Discord-Music-Bot\|Discord-Music-Bot]] |

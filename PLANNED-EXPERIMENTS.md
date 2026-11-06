@@ -182,6 +182,39 @@ Self-hosted media server for music, video, and podcasts. Accessible on LAN and v
 
 ---
 
+## 6. Dotfiles repo
+**Layer:** cross-cutting (workstation + servers)
+**Status:** Idea (2026-11-06)
+
+### What it is
+One small repo for personal config that should follow you between machines: shell aliases and prompt, `~/.ssh/config` host shortcuts (by Tailscale name), git config, editor settings. Install with a script or GNU Stow.
+
+### Rules
+- **Never** keys, `.env` files, tokens or tailnet auth keys. Public is fine if it's clean; a `.gitleaks.toml` like this repo's catches slips.
+- Per-machine differences go in small overrides, not branches.
+
+### Why now
+The MuttMetrics server (muttmetrics#93) was set up by hand, step by step; the T440p rebuild wants the same shell setup. Server *service* config is not dotfiles: it lives with each app (e.g. muttmetrics `ops/server/`).
+
+---
+
+## 7. Ansible: rebuild servers from files
+**Layer:** 6 (Observability & DevOps)
+**Status:** Idea (2026-11-06)
+
+### What it is
+Playbooks that turn a freshly installed Debian box into a working server, from the config files the apps already keep in git. First target: the MuttMetrics server, whose every step and file is documented (muttmetrics `docs/runbooks/home-server.md` + `ops/server/`). Later: the Vintage Story server and the Proxmox containers.
+
+### What it'd do
+- Base role: updates + unattended-upgrades, admin account + SSH keys + hardening, nftables, timezone, Tailscale (join with a tag).
+- App role: copy `ops/server/` files into place, create the app account and folders, enable the services.
+- Secrets stay out: `.env` is generated on the box (or pulled from a vault later), never stored in the playbook repo.
+
+### Order
+Documentation first (done for MuttMetrics), automation second. Prove the playbook on a scratch VM in Proxmox before pointing it at a live box.
+
+---
+
 ## Security Layer Resources (Layer 3/4 — reference for when building begins)
 
 | Resource | What it is | Link |
