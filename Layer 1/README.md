@@ -18,7 +18,7 @@ Layer 1 is the compute substrate everything above it runs on: Proxmox as hypervi
 
 ### Container Inventory
 
-This is the substrate-level view — what's actually running on Proxmox, regardless of which conceptual layer or cross-cutting category it serves. Same VLAN (30 / SERVICES), same per-container firewall caveat, three different purposes.
+This is the substrate-level view — what's actually running on Proxmox, regardless of which conceptual layer or cross-cutting category it serves. Same VLAN (30 / SERVICES), same per-container firewall caveat, different purposes.
 
 | CT ID | Hostname | Service | Belongs to | Deep-dive doc |
 | --- | --- | --- | --- | --- |
@@ -27,7 +27,7 @@ This is the substrate-level view — what's actually running on Proxmox, regardl
 | 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow | Layer 5 — Data Science & ML | [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model\|Huckleberry Habitat Model]] |
 | 104 | discord-bot | Discord Music Bot (Docker Compose: bot + Lavalink) | Personal & Self-Hosted Services | [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/Discord-Music-Bot\|Discord-Music-Bot]] |
 
-CT 100/101 are personal services that happen to be LXCs — see [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/README|Personal & Self-Hosted Services]] for the cross-cutting view. CT 103 is Layer 5's first deployed component, but it's still a Layer 1 container like the other two: same LXC settings table conventions, same firewall-disabled rationale, same VLAN.
+CT 100/101 are personal services that happen to be LXCs — see [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/README|Personal & Self-Hosted Services]] for the cross-cutting view. CT 103 is Layer 5's first deployed component, but it's still a Layer 1 container like the others: same LXC settings table conventions, same firewall-disabled rationale, same VLAN.
 
 ### Documentation
 

@@ -215,6 +215,23 @@ Documentation first (done for MuttMetrics), automation second. Prove the playboo
 
 ---
 
+## 8. Self-hosted monitoring
+**Layer:** 6 (Observability & DevOps)
+**Status:** Idea (2026-11-08)
+
+### What it is
+A small monitoring container on Proxmox (Uptime Kuma, or a self-hosted Healthchecks) that watches the LAN: the MuttMetrics server, the Vintage Story server, the Proxmox containers, OPNsense. Light: one LXC, a few hundred MB of RAM.
+
+### Why it complements, not replaces, the hosted one
+The MuttMetrics server already reports to hosted Healthchecks.io ([[MuttMetrics-Server]] §6). That one has to stay outside: a watcher in the house goes down with the power or the internet, exactly when it's needed. The self-hosted one adds what the hosted free plan doesn't: every LAN service, checks that need LAN access, and history to graph.
+
+### Ideas to try
+- Disk health (SMART) and free space on the MuttMetrics server; Tailscale node health.
+- Watch the watcher: the self-hosted monitor pings the hosted one, so its own death is noticed.
+- Feed the results into the Layer 6 dashboards later.
+
+---
+
 ## Security Layer Resources (Layer 3/4 — reference for when building begins)
 
 | Resource | What it is | Link |

@@ -4,7 +4,7 @@
 >
 > No IPs, tailnet names or client data on this page (public repo). Real values live in the private command center.
 
-**Status:** ✅ live since 2026-11-06. Real data was moved in, the groomer's phone reaches it by name, and backups run nightly. The groomer's first real visit from the salon is the last acceptance check.
+**Status:** ✅ live since 2026-11-06. Real data was moved in, the groomer's phone reaches it by name, backups run nightly, and the groomer logged his first real grooms from the salon on day one. Monitored from outside since 2026-11-08 (§6).
 
 ---
 
@@ -56,13 +56,30 @@ maintainer ──SSH (key only)──► box   (by name over Tailscale; or from 
 - [x] Tailnet: tag, grant, test, the groomer's phone expiry; existing grants reviewed (the broad "members → all of VLAN 30" rule was replaced by per-server tags on 2026-11-06)
 - [ ] Switch hygiene for port 4 (tracked privately; goes public once done)
 
-## 6. Data and backups
+## 6. Monitoring (muttmetrics#104)
+
+A box at home can die quietly, so something **outside** the house watches it: [Healthchecks.io](https://healthchecks.io) (hosted, free plan), alerting on Telegram.
+
+It's a **dead man's switch**: the box pings Healthchecks on a schedule, and Healthchecks alarms when a ping says "failed" **or doesn't arrive**. So it also catches the cases where the box can't report anything (power, network, dead disk).
+
+| Check | What the box sends | Alarms when |
+|---|---|---|
+| Heartbeat | every 5 min, a request through Caddy to an API route that needs the database; ping on success, `/fail` otherwise | the app breaks (within ~5 min) or the box goes silent (~30 min) |
+| Backup | after every nightly run: ping on success, `/fail` on any failure | the backup fails, or doesn't run by ~01:30 |
+
+- **Outgoing only.** Nothing new listens on the box and nothing is opened inbound. The pings are empty requests; Healthchecks sees the home IP and the timing, no client data.
+- The ping URLs are secrets and live only in a root-only file on the box. Email alerts are off, Telegram only.
+- During planned work (long maintenance), the checks get paused so a restart doesn't page anyone. A normal deploy can cause one 🔴/✅ pair.
+- Tested: stopping the API gave a 🔴 on Telegram, starting it a ✅.
+- Later: a **self-hosted** watcher on Proxmox ([[PLANNED-EXPERIMENTS]] §8) for the LAN, next to this one. The outside one stays, because a watcher inside the house dies with the house.
+
+## 7. Data and backups
 
 - **No full-disk encryption on the box, on purpose** (power-cut recovery wins). A TPM-unlocked data volume isn't an option: the 790 predates TPM 2.0, and the volume group has no free space.
-- Nightly backup at 00:30 (DB dump + photo copy) as the app account, with a check afterwards; a failed run shows as a failed systemd unit. A restore drill passed with real data on 2026-11-06.
+- Nightly backup at 00:30 (DB dump + photo copy) as the app account, with a check afterwards; every run reports to Healthchecks (§6), so a failed or missing backup reaches Telegram. A restore drill passed with real data on 2026-11-06.
 - **Same disk** as the live data: covers mistakes, not a dead SSD or the house. The second copy is a **LUKS-encrypted drive kept outside the house** (muttmetrics#221, needs a drive). **No cloud.**
 
-## 7. Decision log
+## 8. Decision log
 
 | Date | Decision |
 |---|---|
@@ -73,3 +90,4 @@ maintainer ──SSH (key only)──► box   (by name over Tailscale; or from 
 | 2026-11-05 | Two accounts: an admin (key + sudo) and the app account (no SSH, one restart command) |
 | 2026-11-06 | Cut over from the workstation; the groomer's phone switched to `https://` by name |
 | 2026-11-06 | Vintage Story server tagged too; per-server grants replace "members → all of VLAN 30" ([[Tailscale]] §7) |
+| 2026-11-08 | Monitoring with hosted Healthchecks.io (free, outgoing pings only, Telegram) instead of self-hosting first: the watcher has to live outside the house. Only a heartbeat and the backup for now; more checks (disk health, visit silence) are an icebox idea |

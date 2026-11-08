@@ -9,8 +9,9 @@ For the full architectural overview (all 8 layers, design philosophy, core vs st
 ## Current Status
 
 **Layer 0 — Physical & Network Foundation** is implemented and stable.
-**Layer 1 — Virtualization & Compute** is in progress — Proxmox is running with three LXC containers deployed (webapp, LibreTranslate, Huckleberry habitat model). k3s, Windows VMs, and snapshot discipline not yet in place.
+**Layer 1 — Virtualization & Compute** is in progress — Proxmox is running with four LXC containers deployed (webapp, LibreTranslate, Huckleberry habitat model, Discord music bot). k3s, Windows VMs, and snapshot discipline not yet in place.
 **Layer 5 — Data Science & ML** has its first component: the Huckleberry habitat suitability model (FastAPI + MLflow) deployed as a Dockerized inference API on its own LXC.
+**Personal & Self-Hosted Services** run beside the layers: the MuttMetrics server (a dedicated OptiPlex) is live since 2026-11, monitored from outside by Healthchecks.io.
 Layers 2–4 and 6–7 are designed but not yet built.
 
 ---
@@ -55,7 +56,7 @@ Layers 2–4 and 6–7 are designed but not yet built.
 | -------- | -------------- |
 | [[PROJECTS/Homelab/homelab/Personal & Self-Hosted Services/README\|Overview]] | Cross-cutting philosophy, full service inventory (incl. webapp/LibreTranslate, documented under Layer 1) |
 | [[Vintage-Story-Server\|Vintage Story Server]] | Dedicated game server admin guide (Ubuntu, Tailscale networking) |
-| [[MuttMetrics-Server\|MuttMetrics Server]] | Always-on host for a small business app: placement, access model, backups, hardening |
+| [[MuttMetrics-Server\|MuttMetrics Server]] | Always-on host for a small business app: placement, access model, hardening, monitoring, backups |
 | [[Local AI WebUI\|Local AI WebUI]] | Ollama + Open WebUI setup for LAN access |
 | [[OpenClaw\|OpenClaw]] | Local OpenClaw learning instance: identity, Telegram, Control UI, memory findings |
 
