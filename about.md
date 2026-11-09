@@ -45,7 +45,7 @@ Each layer builds on the ones below it.
 Higher layers never bypass lower layers.
 
 ---
-### [[PROJECTS/Homelab/homelab/Layer 0/README|Layer 0 — Physical & Network Foundation]]
+### [Layer 0 — Physical & Network Foundation](layer-0-network/README.md)
 #### Purpose
 Defines the **physical hardware**, **network topology**, and **trust boundaries**.
 This is the most important layer — everything else depends on it.

@@ -186,10 +186,10 @@ All higher layers build on this without rework.
 
 | Document | Scope |
 | -------- | ----- |
-| [[Physical-Topology]] | Hardware, IP ranges, switch port map, current devices |
-| [[Firewall-Rules]] | Design principles, per-VLAN firewall intent, key learnings |
-| [[VLANs]] | Concepts, tagged vs untagged, implementation, lessons learned |
-| [[DNS]] | Unbound recursive DNS, DNSSEC, log cheat sheet |
-| [[DHCP]] | Kea DHCP, static mappings, DORA, log cheat sheet |
-| [[IPv6]] | Internal ULA, SLAAC, attribution, security |
-| [[Tailscale]] | Remote access MVP, ACLs, subnet routing, exit node |
+| [Physical-Topology](Physical-Topology.md) | Hardware, IP ranges, switch port map, current devices |
+| [Firewall-Rules](Firewall-Rules.md) | Design principles, per-VLAN firewall intent, key learnings |
+| [VLANs](VLANs.md) | Concepts, tagged vs untagged, implementation, lessons learned |
+| [DNS](DNS.md) | Unbound recursive DNS, DNSSEC, log cheat sheet |
+| [DHCP](DHCP.md) | Kea DHCP, static mappings, DORA, log cheat sheet |
+| [IPv6](IPv6.md) | Internal ULA, SLAAC, attribution, security |
+| [Tailscale](Tailscale.md) | Remote access MVP, ACLs, subnet routing, exit node |

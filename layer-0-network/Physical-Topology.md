@@ -70,13 +70,13 @@ Checked against the switch's 802.1Q *VLAN Config* and *Port Config* pages on 202
 | 4 | 30 (+ VLAN1) | 30 | on | Admit all | **Unmanaged switch** → Vintage Story server + MuttMetrics server | Both boxes share one L2 segment (see below) |
 | 5 | 40 (+ VLAN1) | 40 | on | Admit all | — | Prepared access port for the CyberLab |
 | 6 | 50 (+ VLAN1) | 50 | on | Admit all | — | Prepared access port for Guest |
-| 7 | Tagged 10–50 | 10 | on | Tagged only | Proxmox host | Trunk, not in VLAN1 ([[Proxmox]]) |
+| 7 | Tagged 10–50 | 10 | on | Tagged only | Proxmox host | Trunk, not in VLAN1 ([Proxmox](../layer-1-compute/Proxmox.md)) |
 | 8 | 10 (+ VLAN1) | 10 | **off** | Admit all | — | Management access port: turn ingress checking on |
 | SFP 9–10 | VLAN1 | 1 | on | Admit all | Unused | |
 
 ### VLAN1 is not as harmless as it looks (open, 2026-11-05)
 
-VLAN1 ("System-VLAN") still has ports 2–6 and 8–10 as members. No trunk carries it, so it never reaches OPNsense, which is why it looked harmless ([[Proxmox]] §VLAN1). The catch is that the access ports **Admit All** frames, and ingress checking only drops VLANs a port *isn't* a member of. So a device on port 4 can send frames **tagged VLAN 1** and they're accepted. The switch then delivers them, untagged, out of every other VLAN1 port, including the main PC on port 2. That's a path from SERVICES to TRUSTED that **never touches the firewall**.
+VLAN1 ("System-VLAN") still has ports 2–6 and 8–10 as members. No trunk carries it, so it never reaches OPNsense, which is why it looked harmless ([Proxmox](../layer-1-compute/Proxmox.md) §VLAN1). The catch is that the access ports **Admit All** frames, and ingress checking only drops VLANs a port *isn't* a member of. So a device on port 4 can send frames **tagged VLAN 1** and they're accepted. The switch then delivers them, untagged, out of every other VLAN1 port, including the main PC on port 2. That's a path from SERVICES to TRUSTED that **never touches the firewall**.
 
 Fix, one port at a time, port 4 first:
 1. Remove the access ports (2–6, 8, and the unused SFPs) from VLAN1's membership, as was already done for ports 1 and 7. Their PVIDs aren't 1, and switch management lives on VLAN 10, so nothing should drop. Keep port 8 as the recovery path while doing it.
@@ -89,7 +89,7 @@ Untagged frames on an access port always land in the PVID's VLAN. To know where 
 
 An unmanaged switch on port 4 lets the Vintage Story server and the MuttMetrics server share one cable run. Both end up in VLAN 30, because the unmanaged switch passes untagged frames and port 4 assigns them to VLAN 30.
 
-**What this means:** traffic between those two boxes is switched inside the unmanaged switch and **never reaches OPNsense**, so no firewall rule can separate them. Isolation between them has to come from each host's own firewall. The MuttMetrics server runs nftables for this, because it holds client data ([[MuttMetrics-Server]]). If that ever stops being enough, the fix is to give one of the boxes its own managed-switch port (or its own VLAN).
+**What this means:** traffic between those two boxes is switched inside the unmanaged switch and **never reaches OPNsense**, so no firewall rule can separate them. Isolation between them has to come from each host's own firewall. The MuttMetrics server runs nftables for this, because it holds client data ([MuttMetrics-Server](../services/MuttMetrics-Server.md)). If that ever stops being enough, the fix is to give one of the boxes its own managed-switch port (or its own VLAN).
 
 ---
 

@@ -10,10 +10,10 @@ Four LXCs run on this Proxmox host today. This doc covers the full build-out for
 | --- | --- | --- | --- |
 | 100 | webapp | Cveda (Next.js + PM2) | § [Webapp Container Setup](#webapp-container-setup) below |
 | 101 | libretranslate | LibreTranslate (Docker) | § [LibreTranslate Container Setup](#libretranslate-container-setup) below |
-| 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow (Docker Compose) | § [Huckleberry Container Setup](#huckleberry-container-setup) below + [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model\|full Layer 5 doc]] |
-| 104 | discord-bot | Discord Music Bot (Docker Compose: bot + Lavalink) | [[PROJECTS/discord-music-bot/docs/PROXMOX_DEPLOY\|PROXMOX_DEPLOY.md]] |
+| 103 | huckleberry | Huckleberry habitat model — FastAPI + MLflow (Docker Compose) | § [Huckleberry Container Setup](#huckleberry-container-setup) below + [full Layer 5 doc](../layer-5-data-science/Huckleberry-Habitat-Model.md) |
+| 104 | discord-bot | Discord Music Bot (Docker Compose: bot + Lavalink) | [PROXMOX_DEPLOY.md](https://github.com/BOYSABIO/discord-music-bot/blob/main/docs/PROXMOX_DEPLOY.md) |
 
-See [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for how these three map onto Layer 1 vs. Personal Services vs. Layer 5.
+See [Layer 1 README](README.md) for how these three map onto Layer 1 vs. Personal Services vs. Layer 5.
 
 ---
 ## Table of Contents
@@ -54,8 +54,8 @@ See [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for how these thr
 - **Proxmox host IP**: `10.x.x.3` (VLAN10)
 - **Webapp LXC**: `10.x.x.10` (VLAN30)
 - **LibreTranslate LXC**: `10.x.x.11` (VLAN30)
-- **Huckleberry LXC**: `10.x.x.12` (VLAN30) — see [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]]
-- **Discord Music Bot LXC**: `10.x.x.14` (VLAN30) — see [[PROJECTS/discord-music-bot/docs/PROXMOX_DEPLOY|PROXMOX_DEPLOY.md]]
+- **Huckleberry LXC**: `10.x.x.12` (VLAN30) — see [Huckleberry Habitat Model](../layer-5-data-science/Huckleberry-Habitat-Model.md)
+- **Discord Music Bot LXC**: `10.x.x.14` (VLAN30) — see [PROXMOX_DEPLOY.md](https://github.com/BOYSABIO/discord-music-bot/blob/main/docs/PROXMOX_DEPLOY.md)
 - **Router/Gateway for VLAN30**: `10.x.x.1`
 - **Firewall**: OPNsense handles inter-VLAN routing and firewall rules
 - **Proxmox is connected via a trunk port** — the physical NIC carries tagged VLANs, and `vmbr0` is a VLAN-aware bridge (`bridge-vids 2-4094`)
@@ -171,7 +171,7 @@ These settings were used for both containers in this setup:
 | Firewall                | ❌ Disabled        | See caveat below — critical                     |
 | DNS                     | Use host settings | Inherits from Proxmox host                      |
 
-> Huckleberry (CT 103) uses a heavier profile — 2 cores / 4096 MiB RAM / 20GB+ disk — since it runs MLflow + FastAPI together. Same VLAN, firewall, and DNS settings as above. Full settings table in [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]].
+> Huckleberry (CT 103) uses a heavier profile — 2 cores / 4096 MiB RAM / 20GB+ disk — since it runs MLflow + FastAPI together. Same VLAN, firewall, and DNS settings as above. Full settings table in [Huckleberry Habitat Model](../layer-5-data-science/Huckleberry-Habitat-Model.md).
 
 ---
 ### The Proxmox Firewall + VLAN Bug
@@ -414,9 +414,9 @@ LibreTranslate is now accessible from the webapp container at `http://10.x.x.11:
 ## Huckleberry Container Setup
 **Container:** CT 103 | IP: `10.x.x.12` | Hostname: `huckleberry`
 
-The third LXC on this host runs the Huckleberry habitat suitability model — a Dockerized FastAPI inference API backed by an MLflow registry. It uses the same base LXC conventions as webapp/LibreTranslate (unprivileged, nesting enabled, VLAN 30, Proxmox firewall disabled — see [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] for the inventory), but with a heavier resource allocation (2 cores / 4096 MiB RAM) since it runs two Docker Compose services at once.
+The third LXC on this host runs the Huckleberry habitat suitability model — a Dockerized FastAPI inference API backed by an MLflow registry. It uses the same base LXC conventions as webapp/LibreTranslate (unprivileged, nesting enabled, VLAN 30, Proxmox firewall disabled — see [Layer 1 README](README.md) for the inventory), but with a heavier resource allocation (2 cores / 4096 MiB RAM) since it runs two Docker Compose services at once.
 
-This doc only covers the LXC-level shape. Full deploy detail — Docker Compose setup, MLflow seeding, the helper scripts, LAN access, troubleshooting — lives in its own doc since it's a Layer 5 (Data Science & ML) concern, not a Layer 1 one: see [[PROJECTS/Homelab/homelab/Layer 5/Huckleberry-Habitat-Model|Huckleberry Habitat Model]].
+This doc only covers the LXC-level shape. Full deploy detail — Docker Compose setup, MLflow seeding, the helper scripts, LAN access, troubleshooting — lives in its own doc since it's a Layer 5 (Data Science & ML) concern, not a Layer 1 one: see [Huckleberry Habitat Model](../layer-5-data-science/Huckleberry-Habitat-Model.md).
 
 ---
 ## MGMT VLAN Internet Access

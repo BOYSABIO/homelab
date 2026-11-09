@@ -27,14 +27,14 @@
 - **History:** this section used to read "designed but not implemented". The rest of this document is the story of getting from there to here.
 
 ### Physical Switch Port Map
-The current port map, with each port's VLAN membership, lives in [[Physical-Topology]] (one source of truth). In short:
+The current port map, with each port's VLAN membership, lives in [Physical-Topology](Physical-Topology.md) (one source of truth). In short:
 - Ports 1 and 7 are trunks (OPNsense and Proxmox).
 - Ports 2–3 are TRUSTED.
 - Port 4 is SERVICES, with an unmanaged switch behind it (Vintage Story server + MuttMetrics server).
 - Ports 5, 6 and 8 are prepared access ports for CLAB, GUEST and MGMT.
 
 ### Current Reality
-- Traffic between VLANs is routed and filtered by OPNsense ([[Firewall-Rules]])
+- Traffic between VLANs is routed and filtered by OPNsense ([Firewall-Rules](Firewall-Rules.md))
 - Traffic *inside* one VLAN never reaches the firewall. That matters on port 4, where two servers share an unmanaged switch: host firewalls do the separating there
 
 ---

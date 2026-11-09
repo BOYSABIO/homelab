@@ -159,7 +159,7 @@ Players connect **by name, straight to the server's own Tailscale node**:
 vsserver:42420
 ```
 
-The tailnet policy grants members and the close group `tcp:42420` and `udp:42420` on `tag:vsserver`, and nothing else; a policy test checks it ([[Tailscale]] §7).
+The tailnet policy grants members and the close group `tcp:42420` and `udp:42420` on `tag:vsserver`, and nothing else; a policy test checks it ([Tailscale](../layer-0-network/Tailscale.md) §7).
 
 *History:* from 2026-03 players had to use the server's VLAN 30 address through OPNsense's subnet route (`10.30.x.x:42420`). The only member rule then was "members → `10.zz.zz.0/24`", which covers the LAN address but not the server's Tailscale address, so connecting by name stopped working once the default allow-all policy was replaced. That broad rule also let every member reach every port on every VLAN 30 host, and it was removed on 2026-11-06.
 

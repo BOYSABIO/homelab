@@ -23,10 +23,10 @@ The salon has no network, so the box lives at home and the groomer reaches it **
 
 ## 3. Placement: VLAN 30 (SERVICES), port 4, unmanaged switch
 
-The box shares switch port 4 with the Vintage Story server through an unmanaged switch ([[Physical-Topology]]). Both are in VLAN 30.
+The box shares switch port 4 with the Vintage Story server through an unmanaged switch ([Physical-Topology](../layer-0-network/Physical-Topology.md)). Both are in VLAN 30.
 
-- **Between VLANs** (the workstation on TRUSTED reaching it over SSH): OPNsense routes and filters, as usual ([[Firewall-Rules]]).
-- **Inside port 4** (Vintage Story server ↔ MuttMetrics server): the traffic never leaves the unmanaged switch, so OPNsense can't see or filter it. **Each host's own firewall is the only control there.** This one runs nftables with a default drop; since the Vintage Story server was tagged ([[Vintage-Story-Server]]), it can't reach this box through Tailscale either.
+- **Between VLANs** (the workstation on TRUSTED reaching it over SSH): OPNsense routes and filters, as usual ([Firewall-Rules](../layer-0-network/Firewall-Rules.md)).
+- **Inside port 4** (Vintage Story server ↔ MuttMetrics server): the traffic never leaves the unmanaged switch, so OPNsense can't see or filter it. **Each host's own firewall is the only control there.** This one runs nftables with a default drop; since the Vintage Story server was tagged ([Vintage-Story-Server](Vintage-Story-Server.md)), it can't reach this box through Tailscale either.
 
 ## 4. Access model
 
@@ -43,7 +43,7 @@ maintainer ──SSH (key only)──► box   (by name over Tailscale; or from 
 - **The box runs Tailscale itself** (node `muttmetrics`, tagged, so key expiry is off). The groomer's access doesn't depend on OPNsense's subnet route.
 - **Nothing listens on the LAN except SSH.** App, API and database are on localhost. **No port forwarding, ever.**
 - **HTTPS via `tailscale serve`:** a real certificate, no browser warning, a secure context. WireGuard already encrypts the traffic either way. Accepted: the name `muttmetrics.<tailnet>.ts.net` is in public Certificate Transparency logs. That reveals the name, not a way in.
-- **Tailnet policy** (pattern in [[Tailscale]] §7): the groomer's group → `tag:muttmetrics` on `tcp:443` only, with a policy test (accept 443; deny 22/8000/5432). His phone has key expiry disabled.
+- **Tailnet policy** (pattern in [Tailscale](../layer-0-network/Tailscale.md) §7): the groomer's group → `tag:muttmetrics` on `tcp:443` only, with a policy test (accept 443; deny 22/8000/5432). His phone has key expiry disabled.
 
 ## 5. Hardening (done 2026-11-05/06)
 
@@ -71,7 +71,7 @@ It's a **dead man's switch**: the box pings Healthchecks on a schedule, and Heal
 - The ping URLs are secrets and live only in a root-only file on the box. Email alerts are off, Telegram only.
 - During planned work (long maintenance), the checks get paused so a restart doesn't page anyone. A normal deploy can cause one 🔴/✅ pair.
 - Tested: stopping the API gave a 🔴 on Telegram, starting it a ✅.
-- Later: a **self-hosted** watcher on Proxmox ([[PLANNED-EXPERIMENTS]] §8) for the LAN, next to this one. The outside one stays, because a watcher inside the house dies with the house.
+- Later: a **self-hosted** watcher on Proxmox ([PLANNED-EXPERIMENTS](../PLANNED-EXPERIMENTS.md) §8) for the LAN, next to this one. The outside one stays, because a watcher inside the house dies with the house.
 
 ## 7. Data and backups
 
@@ -89,5 +89,5 @@ It's a **dead man's switch**: the box pings Healthchecks on a schedule, and Heal
 | 2026-11-05 | No full-disk encryption (unattended reboot wins); the off-site backup drive is LUKS-encrypted |
 | 2026-11-05 | Two accounts: an admin (key + sudo) and the app account (no SSH, one restart command) |
 | 2026-11-06 | Cut over from the workstation; the groomer's phone switched to `https://` by name |
-| 2026-11-06 | Vintage Story server tagged too; per-server grants replace "members → all of VLAN 30" ([[Tailscale]] §7) |
+| 2026-11-06 | Vintage Story server tagged too; per-server grants replace "members → all of VLAN 30" ([Tailscale](../layer-0-network/Tailscale.md) §7) |
 | 2026-11-08 | Monitoring with hosted Healthchecks.io (free, outgoing pings only, Telegram) instead of self-hosting first: the watcher has to live outside the house. Only a heartbeat and the backup for now; more checks (disk health, visit silence) are an icebox idea |

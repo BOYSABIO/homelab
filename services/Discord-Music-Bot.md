@@ -72,7 +72,7 @@ All commands use the `-` prefix (e.g. `-play`). The bot requires **Message Conte
 
 ## Deployment
 
-Full LXC creation, Docker install, clone, and `.env` setup: [[PROJECTS/discord-music-bot/docs/PROXMOX_DEPLOY|PROXMOX_DEPLOY.md]]
+Full LXC creation, Docker install, clone, and `.env` setup: [PROXMOX_DEPLOY.md](https://github.com/BOYSABIO/discord-music-bot/blob/main/docs/PROXMOX_DEPLOY.md)
 
 **LXC settings summary:**
 
@@ -225,7 +225,7 @@ file .env   # must NOT say "CRLF" or "CR line terminators"
 docker compose up -d --force-recreate
 ```
 
-Full troubleshooting guide: [[PROJECTS/discord-music-bot/docs/TROUBLESHOOTING|TROUBLESHOOTING.md]]
+Full troubleshooting guide: [TROUBLESHOOTING.md](https://github.com/BOYSABIO/discord-music-bot/blob/main/docs/TROUBLESHOOTING.md)
 
 ---
 

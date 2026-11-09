@@ -2,7 +2,7 @@
 
 **Container:** Proxmox LXC | **VLAN:** 30 (SERVICES) | **Deployed:** June 2026
 
-The Huckleberry habitat suitability model (Microsoft capstone — see `PROJECTS/Huckleberry-Habitat-Suitability-Model/`) moved from a notebook/model artifact into deployed infrastructure: a Dockerized FastAPI inference service backed by an MLflow model registry, running on its own Proxmox LXC. This is the first piece of **Layer 5 — Data Science & Machine Learning** to actually exist (see [[PROJECTS/Homelab/homelab/Layer 5/README|Layer 5 README]]).
+The Huckleberry habitat suitability model (Microsoft capstone — see `PROJECTS/Huckleberry-Habitat-Suitability-Model/`) moved from a notebook/model artifact into deployed infrastructure: a Dockerized FastAPI inference service backed by an MLflow model registry, running on its own Proxmox LXC. This is the first piece of **Layer 5 — Data Science & Machine Learning** to actually exist (see [Layer 5 README](README.md)).
 
 Source of truth for the application itself (API code, model, training pipeline) is the project's own repo: `PROJECTS/Huckleberry-Habitat-Suitability-Model/Capstone-Microsoft/` (GitHub: `BOYSABIO/Capstone-Microsoft`). The full step-by-step deploy guide lives there at `docs/homelab-deploy.md` — this page is the homelab-side record of what's actually running, how it sits in the network, and what broke during the real deploy.
 
@@ -39,7 +39,7 @@ The API does **not** bake a model into the image — it loads `models:/huckleber
 | Network | vmbr0, VLAN 30 (SERVICES), static LAN IP |
 | Unprivileged | ✅ Yes |
 | Nesting | ✅ Yes — required for Docker inside the LXC |
-| Firewall | ❌ Disabled (same reasoning as CT 100 / CT 101 — see [[Proxmox (Containers)|Proxmox (Containers)]]) |
+| Firewall | ❌ Disabled (same reasoning as CT 100 / CT 101 — see [Proxmox (Containers)](../layer-1-compute/Proxmox-Containers.md)) |
 
 Same container-firewall caveat applies as the other two SERVICES containers: leave the Proxmox per-container firewall off, OPNsense already enforces VLAN policy, and the firewall bridge has historically broken VLAN tagging on this setup.
 
@@ -115,8 +115,8 @@ A systemd unit wrapping `homelab_start.sh` / `docker compose down` is documented
 
 ## See also
 
-- [[PROJECTS/Homelab/homelab/Layer 5/README|Layer 5 README]] — where this fits in the broader Data Science & ML layer
-- [[PROJECTS/Homelab/homelab/Layer 1/README|Layer 1 README]] — the Proxmox/LXC substrate this runs on, and how CT 103 relates to CT 100/101
-- [[Proxmox (Containers)|Proxmox (Containers)]] — CT 100 / CT 101 / CT 103 LXC-level setup, same VLAN, same firewall caveats
+- [Layer 5 README](README.md) — where this fits in the broader Data Science & ML layer
+- [Layer 1 README](../layer-1-compute/README.md) — the Proxmox/LXC substrate this runs on, and how CT 103 relates to CT 100/101
+- [Proxmox (Containers)](../layer-1-compute/Proxmox-Containers.md) — CT 100 / CT 101 / CT 103 LXC-level setup, same VLAN, same firewall caveats
 - `PROJECTS/Huckleberry-Habitat-Suitability-Model/Capstone-Microsoft/docs/homelab-deploy.md` — full step-by-step deploy guide (Issue #11)
 - `PROJECTS/Huckleberry-Habitat-Suitability-Model/Capstone-Microsoft/FUTURE_TASKS.md` — architecture (serving vs. training, update flows) and planned homelab CD automation

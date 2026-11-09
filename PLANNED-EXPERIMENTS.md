@@ -223,7 +223,7 @@ Documentation first (done for MuttMetrics), automation second. Prove the playboo
 A small monitoring container on Proxmox (Uptime Kuma, or a self-hosted Healthchecks) that watches the LAN: the MuttMetrics server, the Vintage Story server, the Proxmox containers, OPNsense. Light: one LXC, a few hundred MB of RAM.
 
 ### Why it complements, not replaces, the hosted one
-The MuttMetrics server already reports to hosted Healthchecks.io ([[MuttMetrics-Server]] §6). That one has to stay outside: a watcher in the house goes down with the power or the internet, exactly when it's needed. The self-hosted one adds what the hosted free plan doesn't: every LAN service, checks that need LAN access, and history to graph.
+The MuttMetrics server already reports to hosted Healthchecks.io ([MuttMetrics-Server](services/MuttMetrics-Server.md) §6). That one has to stay outside: a watcher in the house goes down with the power or the internet, exactly when it's needed. The self-hosted one adds what the hosted free plan doesn't: every LAN service, checks that need LAN access, and history to graph.
 
 ### Ideas to try
 - Disk health (SMART) and free space on the MuttMetrics server; Tailscale node health.
